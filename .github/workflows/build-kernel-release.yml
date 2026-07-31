@@ -18,6 +18,8 @@ on:
         type: choice
         options:
           - Pad3
+          - Pad2Pro
+          - Pad3+Pad2Pro
           - A14+15+16
           - A15+16
           - A14+15
@@ -156,8 +158,16 @@ jobs:
               jq_filter="map(select(.os_version == \"A14\"))"
               ;;
             Pad3)
-              jq_filter="map(select(.model == \"OP-PAD-3\" or .model == \"OP-PAD-2-PRO\"))"
-              echo "ℹ️ Filter applied: OnePlus Pad 3 / Pad 2 Pro only"
+              jq_filter="map(select(.model == \"OP-PAD-3-SM8750\"))"
+              echo "ℹ️ Filter applied: OnePlus Pad 3 only (OP-PAD-3-SM8750)"
+              ;;
+            Pad2Pro)
+              jq_filter="map(select(.model == \"OP-PAD-2-PRO\"))"
+              echo "ℹ️ Filter applied: OnePlus Pad 2 Pro only (OP-PAD-2-PRO)"
+              ;;
+            Pad3+Pad2Pro)
+              jq_filter="map(select(.model == \"OP-PAD-3-SM8750\" or .model == \"OP-PAD-2-PRO\"))"
+              echo "ℹ️ Filter applied: OnePlus Pad 3 + Pad 2 Pro (both models)"
               ;;
             android*-*.*)
               # Extract android version and kernel version
