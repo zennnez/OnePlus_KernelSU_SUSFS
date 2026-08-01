@@ -1553,6 +1553,15 @@ runs:
         CONFIG_TMPFS_POSIX_ACL=y
         EOF
 
+    - name: Add CGROUP_DEVICE Support
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "Add CGROUP_DEVICE Support"
+        cat >> "$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig" <<EOF
+        CONFIG_CGROUP_DEVICE=y
+        EOF
+        
     - name: Add BBR
       if: ${{ env.OP_BBR == 'true' }}
       shell: bash
