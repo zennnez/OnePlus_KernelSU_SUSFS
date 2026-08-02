@@ -1,4 +1,4 @@
-name: Build and Release OnePlus Kernels
+name: Oneplus Pad 3
 
 permissions:
   contents: write
@@ -54,6 +54,11 @@ on:
         default: false
       mirror_toolchains:
         description: 'Do you want to sync toolchains before build? [99% runs not required]'
+        required: false
+        type: boolean
+        default: false
+      use_self_hosted:
+        description: 'Build on your self-hosted runner instead of GitHub-hosted (needs a runner labeled self-hosted+linux+pad3)'
         required: false
         type: boolean
         default: false
@@ -600,7 +605,7 @@ jobs:
       !cancelled() &&
       needs.set-op-model.result == 'success' &&
       (needs.mirror_toolchain.result == 'success' || needs.mirror_toolchain.result == 'skipped')
-    runs-on: ubuntu-latest
+    runs-on: ${{ (inputs.use_self_hosted == true && fromJSON('["self-hosted","linux","pad3"]')) || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.set-op-model.outputs.matrix) }}
