@@ -1,4 +1,4 @@
-name: Oneplus Pad 3
+name: OnePlus Pad 3
 
 permissions:
   contents: write
@@ -13,24 +13,14 @@ on:
         type: boolean
         default: false
       op_model:
-        description: 'Select the OnePlus kernels to build'
+        description: 'Select the OnePlus Pad 3 variant to build'
         required: true
         type: choice
         options:
           - Pad3
-          - Pad2Pro
-          - Pad3+Pad2Pro
-          - A14+15+16
-          - A15+16
-          - A14+15
-          - A16
-          - A15
-          - A14
-          - android16-6.12
-          - android15-6.6
-          - android14-6.1
-          - android13-5.15
-          - android12-5.10
+          - Pad3-A16
+          - Pad3-A15
+          - Pad3-A15+A16
         default: Pad3
       ksu_options:
         description: 'Enter KernelSU build json'
@@ -66,24 +56,12 @@ on:
         description: 'Custom kernel build timestamp for uname -a (e.g. "Tue Feb 10 10:01:02 UTC 2026"). Leave empty for current time.'
         type: string
         default: ''
-      android12-5_10_susfs_branch_or_commit:
-        description: 'Enter SusFS Branch or commit hash for android12-5.10'
-        type: string
-        default: ''
-      android13-5_15_susfs_branch_or_commit:
-        description: 'Enter SusFS Branch or commit hash for android13-5.15'
-        type: string
-        default: ''
-      android14-6_1_susfs_branch_or_commit:
-        description: 'Enter SusFS Branch or commit hash for android14-6.1'
-        type: string
-        default: ''
       android15-6_6_susfs_branch_or_commit:
-        description: 'Enter SusFS Branch or commit hash for android15-6.6'
+        description: 'Enter SusFS Branch or commit hash for android15-6.6 (Pad3 A15)'
         type: string
         default: ''
       android16-6_12_susfs_branch_or_commit:
-        description: 'Enter SusFS Branch or commit hash for android16-6.12'
+        description: 'Enter SusFS Branch or commit hash for android16-6.12 (Pad3 A16 - future)'
         type: string
         default: ''
 
@@ -145,48 +123,25 @@ jobs:
           jq_filter="."
           
           case "$input" in
-            A14+15+16)
-              ;;
-            A15+16)
-              jq_filter="map(select(.os_version == \"A15\" or .os_version == \"A16\"))"
-              ;;
-            A14+15)
-              jq_filter="map(select(.os_version == \"A14\" or .os_version == \"A15\"))"
-              ;;
-            A16)
-              jq_filter="map(select(.os_version == \"A16\"))"
-              ;;
-            A15)
-              jq_filter="map(select(.os_version == \"A15\"))"
-              ;;
-            A14)
-              jq_filter="map(select(.os_version == \"A14\"))"
-              ;;
             Pad3)
               jq_filter="map(select(.model == \"OP-PAD-3-SM8750\" and .os_version == \"A16\"))"
-              echo "ℹ️ Filter applied: OnePlus Pad 3 only (OP-PAD-3-SM8750, A16)"
+              echo "ℹ️ Filter applied: OnePlus Pad 3 (OP-PAD-3-SM8750, A16 latest)"
               ;;
-            Pad2Pro)
-              jq_filter="map(select(.model == \"OP-PAD-2-PRO\" and .os_version == \"A16\"))"
-              echo "ℹ️ Filter applied: OnePlus Pad 2 Pro only (OP-PAD-2-PRO, A16)"
+            Pad3-A16)
+              jq_filter="map(select(.model == \"OP-PAD-3-SM8750\" and .os_version == \"A16\"))"
+              echo "ℹ️ Filter applied: OnePlus Pad 3 A16"
               ;;
-            Pad3+Pad2Pro)
-              jq_filter="map(select((.model == \"OP-PAD-3-SM8750\" or .model == \"OP-PAD-2-PRO\") and .os_version == \"A16\"))"
-              echo "ℹ️ Filter applied: OnePlus Pad 3 + Pad 2 Pro (A16 only)"
+            Pad3-A15)
+              jq_filter="map(select(.model == \"OP-PAD-3-SM8750\" and .os_version == \"A15\"))"
+              echo "ℹ️ Filter applied: OnePlus Pad 3 A15"
               ;;
-            android*-*.*)
-              # Extract android version and kernel version
-              IFS='-' read -r av kv <<< "$input"
-              
-              # Build android*-* only for A15 and A16
-              jq_filter="map(select(.os_version == \"A15\" or .os_version == \"A16\")) | map(select(.android_version == \"$av\" and .kernel_version == \"$kv\"))"
-              
-              echo "ℹ️  Android-Kernel filter applied: $av-$kv"
-              echo "   Restricted to: A15 and A16 only"
+            Pad3-A15+A16)
+              jq_filter="map(select(.model == \"OP-PAD-3-SM8750\"))"
+              echo "ℹ️ Filter applied: OnePlus Pad 3 — all variants (A15 + A16)"
               ;;
             *)
-              echo "::warning::Unknown input '$input'. Using empty filter."
-              jq_filter="map(select(false))"
+              echo "::warning::Unknown input '$input'. Defaulting to Pad3 A16."
+              jq_filter="map(select(.model == \"OP-PAD-3-SM8750\" and .os_version == \"A16\"))"
               ;;
           esac
           
@@ -990,7 +945,7 @@ jobs:
             feature_flags=$(jq -r --arg MODEL "$model" --arg ORIG_MODEL "$possible_orig_model" --arg OS "$os_ver" '
               ([ .[] | select(.model == $ORIG_MODEL and .os_version == $OS) ][0]) //
               ([ .[] | select(.model == $MODEL      and .os_version == $OS) ][0]) |
-              "\(.hmbird // false)\t\(.susfs // false)\t\(.bbr // false)\t\(.bbr3 // false)\t\(.bbg // false)\t\(.ttl // false)\t\(.ip_set // false)\t\(.unicode // false)\t\(.ds // false)\t\(.ntsync // false)"
+              "\(.hmbird // false)\t\(.susfs // false)\t\(.bbr // false)\t\(.bbr3 // false)\t\(.bbg // false)\t\(.ttl // false)\t\(.ip_set // false)\t\(.unicode // false)\t\(.ds // false)\t\(.ntsync // false)\t\(.pelt // false)"
             ' <<< "$JSON_BUILD_DATA")
             
             features=()
@@ -999,7 +954,7 @@ jobs:
               echo "Warning: No JSON entry found for model: $model" >&2
               features_str="N/A"
             else
-              IFS=$'\t' read -r hmbird susfs bbr bbr3 bbg ttl ip_set unicode ds ntsync <<< "$feature_flags"
+              IFS=$'\t' read -r hmbird susfs bbr bbr3 bbg ttl ip_set unicode ds ntsync pelt <<< "$feature_flags"
               
               # Build features string based on boolean values
               [[ "$hmbird" == "true" ]] && features+=("🐦 HMBIRD")
@@ -1012,6 +967,7 @@ jobs:
               [[ "$unicode" == "true" ]] && features+=("🔧 Unicode Fix")
               [[ "$ds" == "true" ]] && features+=("💻 Droidspaces")
               [[ "$ntsync" == "true" ]] && features+=("🔃 NTSync")
+              [[ "${pelt:-false}" == "true" ]] && features+=("⚡ reduce_pelt")
               
               total=${#features[@]}
               if [ $total -eq 0 ]; then
