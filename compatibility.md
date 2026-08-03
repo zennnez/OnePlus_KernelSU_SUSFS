@@ -1,72 +1,38 @@
-# Compatibility of OnePlus Kernels
-## 1. OnePlus Devices
+# Compatibility Information: OnePlus Pad 3
 
-<table>
-  <tr>
-    <th> :warning: </th>
-    <th> All the Kernels are built on <a href="https://github.com/OnePlusOSS/">OnePlus Official Source</a> and are expected to work only on Stock roms!!!</th>
-  </tr>
-</table>
+## 1. Primary Supported Device
 
- - Do not use the zips after Major Android OTA (a15 -> a16) unless its verified in <a href="https://t.me/WildKernels">WildKernels</a> Telegram group or other sources like XDA.
+| Device Name | Platform / Codename | SoC | Kernel Version | Supported OS Versions |
+|---|---|---|---|---|
+| **OnePlus Pad 3** | `SM8750` / `sun` | Snapdragon 8 Elite | `6.6.x` | Android 15 (OxygenOS 15) <br> Android 16 (OxygenOS 16) |
 
-## 2. Non-OnePlus Devices
-### List of verified devices 
-<table>
-  <tr>
-    <th> :warning: </th>
-    <th> We expect all users who wants to test OnePlus Kernels on Non-OnePlus Phones to first disable dm-verity and verification using fastboot or other means.</th>
-  </tr>
-</table>
+> [!NOTE]
+> All kernels are compiled directly using official [OnePlusOSS](https://github.com/OnePlusOSS) kernel source manifests (`android_kernel_common_oneplus_sm8750` & `android_kernel_modules_and_devicetree_oneplus_sm8750`).
 
- - If your device is not in list, please select the device which is most similar and matches the kernel version (androidXX-YY.ZZ.AAA). AAA must be atleast same or greater. XX-YY.ZZ must match exactly. More Information on this can be read @<a href="https://kernelsu.org/guide/installation.html#kmi">KernelSU.org</a>.
- - Thanks to our community users at <a href="https://t.me/WildKernelsTG">WildKernels</a> for helping us compile the list.
- - We request more users come forward help us keep the list updated. 
- - I'm sure more devices from other brands are also supported.
-<table>
-	<tr> 
-		<th align="center"> Device Name </th>
-		<th align="center"> Working Kernel Device Name </th>
-	    <th align="center"> Current Kernel Version </th>
-	</tr>
-	<tr> 
-		<td align="center"> Poco X7 Pro(used to work before)<br>Realme GT 7 Pro </td>
-		<td align="center"> OnePlus 13<br>OnePlus Ace 5 Pro </td>
-		<td align="center"> android15-6.6.89<br>android15-6.6.89 </td>
-	</tr>
-	<tr> 
-		<td align="center"> Realme GT Neo 5SE<br>Realme GT Neo 5 </td>
-		<td align="center"> OnePlus 10T<br>OnePlus 10 Pro<br>OnePlus Ace 2<br>OnePlus 11r (Partially) </td>
-		<td align="center"> android12-5.10.226<br>android12-5.10.226<br>android12-5.10.226<br>android12-5.10.209 </td>
-	</tr>
-	<tr> 
-		<td align="center"> Realme GT 5<br>Poco F6 Pro </td>
-		<td align="center"> OnePlus 11<br>OnePlus 11 </td>
-		<td align="center"> android13-5.15.167<br>android13-5.15.180 </td>
-	</tr>
-	<tr> 
-		<td align="center"> Realme GT Neo 6SE<br>Realme GT Neo 6T </td>
-		<td align="center"> OnePlus Nord 4 </td>
-		<td align="center"> android14-6.1.118 </td>
-	</tr>
-	<tr> 
-		<td align="center"> Realme GT 2 Pro </td>
-		<td align="center"> OnePlus 10 Pro </td>
-		<td align="center"> android12-5.10.226 </td>
-	</tr>
-	<tr> 
-		<td align="center"> Poco F8 Ultra </td>
-		<td align="center"> OnePlus 15 </td>
-		<td align="center"> android16-6.12.23 </td>
-	</tr>
-	<tr> 
-		<td align="center"> MI 12T Pro </td>
-		<td align="center"> OnePlus 10T</td>
-		<td align="center"> android12-5.10.226<br>android12-5.10.236</td>
-	</tr>
-	<tr> 
-		<td align="center"> Realme GT5 Pro </td>
-		<td align="center"> OnePlus 12 </td>
-		<td align="center"> android14-6.1.118 </td>
-	</tr>
-</table>
+---
+
+## 2. Integrated Feature Matrix & Compatibility
+
+The kernel for OnePlus Pad 3 includes the following built-in optimizations and features:
+
+| Feature / Patch | Status | Details |
+|---|---|---|
+| **KernelSU / KernelSU-Next** | ✅ Integrated | Full inline KernelSU support |
+| **SUSFS** | ✅ Integrated | Kernel-level root hiding mechanisms (`v2.2.0` patch set) |
+| **HMBIRD SCX (Fengchi)** | ✅ Enabled | SM8750-tuned scheduler extensions |
+| **BBR & BBRv3** | ✅ Enabled | Advanced TCP congestion control algorithms |
+| **Baseband Guard (BBG)** | ✅ Enabled | Critical partition protection |
+| **NTSync** | ✅ Enabled | Low-latency synchronization primitives |
+| **Droidspaces** | ✅ Enabled | Support for running full Linux containers |
+| **LZ4 ARMv8 Acceleration** | ✅ Enabled | NEON SIMD accelerated LZ4 compression/decompression |
+| **Workqueue Lock Reduction** | ✅ Enabled | Improved I/O throughput on multi-threaded workqueues |
+| **ZRAM Priority Reads** | ✅ Enabled | Prioritized ZRAM read BIO handling (`REQ_PRIO`) |
+| **reduce_pelt** | ✅ Enabled | 16ms PELT half-life tuning for fast CPU frequency ramp-up |
+
+---
+
+## 3. Important Flashing Guidelines
+
+1. **Stock ROM Requirement**: Flashing is recommended on stock OxygenOS / ColorOS firmware.
+2. **Major Version OTAs**: Before updating across major Android releases (e.g. A15 → A16), ensure you flash the matching kernel build variant (`OP-PAD-3-SM8750` A15 vs A16).
+3. **Backup Recommendation**: Always keep a backup of your stock `boot.img` / `init_boot.img` before applying any custom kernel zip via recovery or KernelFlasher.

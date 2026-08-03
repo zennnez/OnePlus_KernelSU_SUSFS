@@ -1,12 +1,12 @@
 <div align="center">
 
-# 🔥 Wild Kernels for OnePlus (Oppo/Realme)
+# 🔥 Wild Kernel for OnePlus Pad 3 (SM8750)
 
 [![KernelSU-Next](https://img.shields.io/badge/KernelSU_Next-Supported-green)](https://kernelsu-next.github.io/webpage/)
 [![KernelSU](https://img.shields.io/badge/KernelSU-Supported-green)](https://kernelsu.org/)
-[![Wild KSU](https://img.shields.io/badge/Wild_KSU-Not%20Supported-cb2431)](https://github.com/WildKernels/Wild_KSU/)
 [![SUSFS](https://img.shields.io/badge/SUSFS-Integrated-orange?logo=gitlab)](https://gitlab.com/simonpunk/susfs4ksu)
-[![OnePlusOSS Tracking Status](https://img.shields.io/badge/OnePlusOSS--Tracker-active-green)](https://github.com/WildKernels/OnePlus_KernelSU_SUSFS/blob/status-page/README.md)
+[![Device](https://img.shields.io/badge/Device-OnePlus_Pad_3-blue)](https://github.com/WildKernels/OnePlus_KernelSU_SUSFS)
+[![SoC](https://img.shields.io/badge/SoC-Snapdragon_8_Elite_(SM8750)-red)](https://www.qualcomm.com/products/mobile/snapdragon/smartphones/snapdragon-8-series-mobile-platforms/snapdragon-8-elite-mobile-platform)
 
 </div>
 
@@ -32,57 +32,66 @@ Flashing this kernel will not void your warranty, but there is always a risk of 
 
 ---
 
-## 🔧 Available Kernels
+## 📱 Supported Device
 
 <div align="center">
 
-| Kernel | Repository | Status |
-|--------|------------|--------|
-| 🏗️ **GKI** | [GKI_KernelSU_SUSFS](https://github.com/WildKernels/GKI_KernelSU_SUSFS) | ✅ Active |
-| 👑 **Sultan** | [Sultan_KernelSU_SUSFS](https://github.com/WildKernels/Sultan_KernelSU_SUSFS) | ✅ Active |
-| 📱 **OnePlus/Oppo/Realme** | [OnePlus_KernelSU_SUSFS](https://github.com/WildKernels/OnePlus_KernelSU_SUSFS) | ✅ Active |
-| 📱 **Samsung** | [Samsung_KernelSU_SUSFS](https://github.com/WildKernels/Samsung_KernelSU_SUSFS) | ✅ Active |
+| Device | SoC | Kernel | Android |
+|--------|-----|--------|---------|
+| **OnePlus Pad 3** | Snapdragon 8 Elite (SM8750) | `6.6` | A15 / A16 |
+
 </div>
+
+> [!IMPORTANT]
+> This builder is **exclusively** for the **OnePlus Pad 3 (SM8750 / "sun" platform)**.
+> It is built from [OnePlus Official Source](https://github.com/OnePlusOSS/) and is expected to work only on **stock OxygenOS ROMs**.
+> Do not flash after a major Android OTA (e.g., A15 → A16) unless verified.
 
 ---
 
 ## 🔗 Additional Resources
 
-- 🩹 [Kernel Patches](https://github.com/WildKernels/kernel_patches)
+- 🩹 [Kernel Patches](https://github.com/zennnez/kernel_patches)
 - ⚡ [Kernel Flasher](https://github.com/fatalcoder524/KernelFlasher)
+- 📋 [Device Compatibility](https://github.com/zennnez/OnePlus_KernelSU_SUSFS/blob/main/compatibility.md)
 
----
-
-## 📱 Device Compatibility
-
-- Please verify the device compatibility before flashing here: [Compatibility_Info](https://github.com/WildKernels/OnePlus_KernelSU_SUSFS/blob/main/compatibility.md). 
-
----
-
-## 📱 OnePlusOSS Repositories Tracking
-
-- 📊 **Live Dashboard**: [OnePlus Repos Tracking & Changes](https://github.com/WildKernels/OnePlus_KernelSU_SUSFS/blob/status-page/README.md)
-- ⏱️ **Update Frequency**: Every 2 hours (Automated)
 ---
 
 ## ✨ Features
 
-- 🔐 **KernelSU / KernelSU-Next**: A root solution for Android GKI devices that works in kernel mode and grants root permission to userspace applications directly in kernel space
-- 🔥 **WildKSU Manager Support**: Support for the Root Manager developed by our team with lots of customisations
-- 🥷 **SUSFS**: An addon root hiding kernel patches and userspace module for KernelSU
-- 🛡️ **BBG**: LSM-based Baseband Guard security to protect critical device partitions. abl/efisp can be added to whitelist for efisp exploit devices.
-- 🛠️ **HMBIRD SCX**: Scheduler extensions for SM8750/MT6991 devices
-- 🖧 **BBRv1**: Improved TCP congestion control
-- 🖧 **BBRv3**: Improved TCP congestion control
-- 🚦 **CAKE and PIE qdisc Support**: Better Net Schedulers
-- ✅ **LTO**: Link Time Optimisation enabled
-- 🚀 **Optimisation patches**: Memory, I/O, CPU scheduler, network and other general tunings
-- 🌐 **TTL Target Support**: Network packet manipulation
-- 🧱 **IP Set & IPv6 NAT Support**: Advanced firewall capabilities and IPv6 NAT Support
-- ⚡️ **TMPFS XATTR / POSIX ACL**: Extended TMPFS support for meta modules and Mountify
-- </> **Unicode Bypass Fix**: Prevent path traversal and other detections using non-printable Unicode codepoints [Experimental]
-- 🖥️ **Droidspaces Support**: Support Portable Linux containers to run full Linux environments.
-- 🔃 **NTSync**: Provide high-performance, low-latency synchronization primitives compatible with the Windows NT kernel API
+| Feature | Description |
+|---------|-------------|
+| 🔐 **KernelSU / KernelSU-Next** | Root solution working in kernel mode, grants root directly in kernel space |
+| 🥷 **SUSFS** | Root hiding kernel patches and userspace module for KernelSU |
+| 🛡️ **BBG** | LSM-based Baseband Guard security to protect critical device partitions |
+| 🛠️ **HMBIRD SCX (Fengchi)** | Scheduler extensions tuned for SM8750 (Snapdragon 8 Elite) |
+| 🖧 **BBRv1 & BBRv3** | Improved TCP congestion control |
+| 🚦 **CAKE and PIE qdisc** | Better network schedulers |
+| ✅ **LTO (Thin)** | Link Time Optimisation for reduced binary size and improved performance |
+| 🌐 **TTL Target** | Network packet TTL manipulation |
+| 🧱 **IP Set & IPv6 NAT** | Advanced firewall and IPv6 NAT support |
+| ⚡️ **TMPFS XATTR / POSIX ACL** | Extended TMPFS support for meta modules and Mountify |
+| </> **Unicode Bypass Fix** | Prevent path traversal and Unicode detection bypasses [Experimental] |
+| 🖥️ **Droidspaces** | Portable Linux container support — run full Linux environments |
+| 🔃 **NTSync** | High-performance, low-latency Windows NT-compatible sync primitives |
+| 🚀 **LZ4 ARMv8 NEON** | LZ4 1.10.0 with ARMv8 SIMD acceleration for ZRAM decompression |
+| ⚡ **reduce_pelt** | Scheduler PELT half-life reduced 32ms → 16ms for faster CPU ramp-up (Sultan Alsawaf) |
+| 🔄 **Workqueue Optimization** | Reduced lock contention on unbound workqueues — major I/O throughput gains |
+| 🗜️ **ZRAM Priority Reads** | Xiaomi ZRAM optimization: read BIOs use `REQ_PRIO` for prioritized scheduling |
+
+---
+
+## 📦 Build Variants
+
+<div align="center">
+
+| Variant | Android | Kernel | Manifest |
+|---------|---------|--------|----------|
+| **OP-PAD-3-SM8750** (A16) | Android 16 | 6.6 (latest) | `oneplus_pad_3_sm8750_w.xml` |
+| **OP-PAD-3-SM8750** (A15) | Android 15 | 6.6 (latest) | `oneplus_pad_3_sm8750_v.xml` |
+| **OP-PAD-3-SM8750-6.6.30** (A15) | Android 15 | 6.6.30 | `oneplus_pad_3_sm8750_6.6.30_v.xml` |
+
+</div>
 
 ---
 
@@ -92,7 +101,7 @@ For GKI installation, please follow the official guide:
 
 📖 **[KernelSU Installation Guide](https://kernelsu.org/guide/installation.html)**
 
-You can also find Installation instructions in the release notes.
+You can also find installation instructions in the release notes.
 
 ---
 
@@ -101,7 +110,6 @@ You can also find Installation instructions in the release notes.
 **These amazing people help make this project possible! ❤️**
 
 <div align="center">
-
 
 | 🔧 **Project** | 👨‍💻 **Developer** | 🔗 **Link** |
 |:---------------:|:----------------:|:-----------:|
@@ -113,6 +121,8 @@ You can also find Installation instructions in the release notes.
 | **Sultan Kernels** | kerneltoast | [![GitHub](https://img.shields.io/badge/GitHub-kerneltoast-blue?style=flat-square&logo=github)](https://github.com/kerneltoast) |
 | **Baseband Guard** | vc-teahouse | [![GitHub](https://img.shields.io/badge/GitHub-vc--teahouse-blue?style=flat-square&logo=github)](https://github.com/vc-teahouse/Baseband-guard.git) |
 | **Droidspaces** | ravindu644 | [![GitHub](https://img.shields.io/badge/GitHub-ravindu644-blue?style=flat-square&logo=github)](https://github.com/ravindu644/Droidspaces-OSS.git) |
+| **reduce_pelt patch** | Sultan Alsawaf | [![GitHub](https://img.shields.io/badge/GitHub-kerneltoast-blue?style=flat-square&logo=github)](https://github.com/kerneltoast) |
+| **LZ4 ARMv8 patch** | DogEZ | [![GitHub](https://img.shields.io/badge/GitHub-DogEZ-blue?style=flat-square&logo=github)](https://github.com/dogez) |
 
 </div>
 
@@ -124,7 +134,7 @@ You can also find Installation instructions in the release notes.
 
 If you encounter any issues or need help, feel free to:
 - 🐛 Open an issue in this repository
-- 💬 Reach out to me directly
+- 💬 Reach out via Telegram
 
 ---
 
@@ -132,8 +142,8 @@ If you encounter any issues or need help, feel free to:
 
 <div align="center">
   
-[![Telegram](https://img.shields.io/badge/Telegram-fatalcoder524-blue?logo=telegram)](https://t.me/anonymous_yolo)
-[![Telegram Group](https://img.shields.io/badge/Telegram-WildKernels-blue?logo=telegram)](https://t.me/WildKernelsTG)
+[![Telegram](https://img.shields.io/badge/Telegram-zennnez-blue?logo=telegram)](https://t.me/zennnez)
+[![WildKernels Telegram Group](https://img.shields.io/badge/Telegram-WildKernels-blue?logo=telegram)](https://t.me/WildKernelsTG)
 
 </div>
 
@@ -143,7 +153,6 @@ If you encounter any issues or need help, feel free to:
 
 Any and all donations are appreciated!
 
-PayPal: [paypal.me/fatalcoder524](https://paypal.me/fatalcoder524)
+PayPal: [paypal.me/fatalcoder524](https://paypal.me/fatalcoder524) | [paypal.me/zebrazenpai](https://paypal.me/zebrazenpai)
 
 DM on Telegram for UPI donations!
-
