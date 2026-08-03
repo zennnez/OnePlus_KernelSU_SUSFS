@@ -144,6 +144,7 @@ runs:
         bindgen="$OP_BINDGEN"
         ds="$OP_DS"
         ntsync="$OP_NTSYNC"
+        pelt="${OP_PELT:-false}"
         blacklist_modules="$OP_BLACKLIST_MODULES"
         optimize='${{ inputs.optimize_level }}'
         
@@ -295,6 +296,10 @@ runs:
           errors+=("Input 'ntsync' cannot be empty")
         elif [[ "$ntsync" != "true" && "$ntsync" != "false" ]]; then
           errors+=("Input 'ntsync' contains invalid characters. Allowed: 'true' or 'false'. Got: '$ntsync'")
+        fi
+        
+        if [[ -n "$pelt" && "$pelt" != "true" && "$pelt" != "false" ]]; then
+          errors+=("Input 'pelt' contains invalid characters. Allowed: 'true' or 'false'. Got: '$pelt'")
         fi
         
         case "$optimize" in
@@ -1471,7 +1476,34 @@ runs:
         echo "Patching use_unlikely_wrap_cpufreq.patch"
         patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/use_unlikely_wrap_cpufreq.patch"
         
+        echo "Patching workqueue lock reduction"
+        patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/workqueue.patch" || echo "⚠️  workqueue patch skipped or already applied"
+        
+        echo "Patching ZRAM read prioritization (xiaomi)"
+        patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/xiaomi_zram_optimization.patch" || echo "⚠️  xiaomi_zram_optimization patch skipped or already applied"
+        
+        if [ "${OP_PELT:-false}" = "true" ]; then
+          echo "Patching reduce_pelt (Sultan Alsawaf, 32ms->16ms half-life)"
+          patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/reduce_pelt.patch" || echo "⚠️  reduce_pelt patch skipped or already applied"
+        else
+          echo "ℹ️  reduce_pelt skipped (pelt=false)"
+        fi
+        
         echo "✅ Optimisation Patches applied"
+        echo "::endgroup::"
+
+    - name: Apply LZ4 ARMv8 Acceleration
+      if: ${{ env.OP_OPT == 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "::group::Apply LZ4 ARMv8 acceleration"
+        cd "$COMMON_KERNEL_FOLDER"
+        echo "Patching LZ4 1.10.0 with ARMv8 NEON SIMD acceleration"
+        patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/lz4_armv8_acceleration.patch"
+        echo "Patching LZ4 NEON-optimized decompress_unlz4 for init_boot/kernel partitions"
+        patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/lz4_optimized_decompress.patch"
+        echo "✅ LZ4 ARMv8 patches applied"
         echo "::endgroup::"
 
     - name: Apply NTSync Patch
