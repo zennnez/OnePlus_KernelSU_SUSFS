@@ -337,6 +337,19 @@ runs:
         git config --global core.fsmonitor true
         git config --global pack.sparse true
 
+    - name: 🧹 Async Disk Space Optimization
+      shell: bash
+      run: |
+        echo "::group::Async background runner cleanup"
+        echo "Relocating heavy runner packages for background deletion..."
+        sudo mv /usr/share/dotnet /usr/share/dotnet_trash 2>/dev/null || true
+        sudo mv /usr/local/lib/android /usr/local/lib/android_trash 2>/dev/null || true
+        sudo mv /opt/ghc /opt/ghc_trash 2>/dev/null || true
+        sudo mv /usr/lib/jvm /usr/lib/jvm_trash 2>/dev/null || true
+        (sudo nice -n 19 ionice -c 3 rm -rf /usr/share/dotnet_trash /usr/local/lib/android_trash /opt/ghc_trash /usr/lib/jvm_trash) &
+        echo "✅ Asynchronous background disk cleanup initiated"
+        echo "::endgroup::"
+
     - name: Sync Kernel Source
       id: sync-kernel-source
       uses: ./action-source/.github/actions/kernel-source-sync
@@ -1996,6 +2009,22 @@ runs:
         fi
         
         echo "✅ Droidspaces Support applied"
+        echo "::endgroup::"
+
+    - name: Add Droidspaces Extended support
+      shell: bash
+      if: ${{ env.OP_DS_EXT == 'true' || env.OP_DROIDSPACES_EXTENDED == 'true' }}
+      run: |
+        echo "::group::Add Droidspaces Extended Support"
+        set -euo pipefail
+        cd "$COMMON_KERNEL_FOLDER"
+        echo "Applying Droidspaces Extended patches..."
+        patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/droidspaces_extended/fix_cgroup.patch" || echo "::warning::fix_cgroup.patch failed or already applied"
+        patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/droidspaces_extended/evdi_drm.patch" || echo "::warning::evdi_drm.patch failed or already applied"
+        cat >> "$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig" <<EOF
+        CONFIG_DRM_EVDI=m
+        EOF
+        echo "✅ Droidspaces Extended Support applied"
         echo "::endgroup::"
 
     - name: Add Build based configs

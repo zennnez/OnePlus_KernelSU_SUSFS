@@ -29,6 +29,7 @@ on:
           - OP12Custom-A16
           - OP12Custom-A15
           - OP12Custom-A15+A16
+          - All-A16
         default: Pad3
       ksu_options:
         description: 'Enter KernelSU build json'
@@ -73,7 +74,7 @@ on:
         type: string
         default: ''
       feature_overrides:
-        description: 'Override per-device feature toggles for this run only (JSON object, e.g. {"opt":false,"bbr3":false}). Keys: hmbird, susfs, opt, ds, bbg, bbr, bbr3, ttl, ip_set, unicode, ntsync, pelt. Omit a key (or leave this blank / "{}") to keep each device''s configs/*.json value.'
+        description: 'Override per-device feature toggles for this run only (JSON object, e.g. {"opt":false,"bbr3":false}). Keys: hmbird, susfs, opt, ds, ds_ext, bbg, bbr, bbr3, ttl, ip_set, unicode, ntsync, pelt, polly, lz4_zstd, zram_writeback. Omit a key (or leave this blank / "{}") to keep each device''s configs/*.json value.'
         required: false
         type: string
         default: '{}'
@@ -183,6 +184,10 @@ jobs:
             OP12Custom-A15+A16)
               jq_filter="map(select(.model == \"OP12-CUSTOM\"))"
               echo "ℹ️ Filter applied: OnePlus 12 (custom ROM source) — all variants (A15 + A16)"
+              ;;
+            All-A16)
+              jq_filter="map(select(.os_version == \"A16\"))"
+              echo "ℹ️ Filter applied: All A16 device configurations"
               ;;
             *)
               echo "::warning::Unknown input '$input'. Defaulting to Pad3 A16."
@@ -1014,7 +1019,7 @@ jobs:
             feature_flags=$(jq -r --arg MODEL "$model" --arg ORIG_MODEL "$possible_orig_model" --arg OS "$os_ver" '
               ([ .[] | select(.model == $ORIG_MODEL and .os_version == $OS) ][0]) //
               ([ .[] | select(.model == $MODEL      and .os_version == $OS) ][0]) |
-              "\(.hmbird // false)\t\(.susfs // false)\t\(.bbr // false)\t\(.bbr3 // false)\t\(.bbg // false)\t\(.ttl // false)\t\(.ip_set // false)\t\(.unicode // false)\t\(.ds // false)\t\(.ntsync // false)\t\(.pelt // false)"
+              "\(.hmbird // false)\t\(.susfs // false)\t\(.bbr // false)\t\(.bbr3 // false)\t\(.bbg // false)\t\(.ttl // false)\t\(.ip_set // false)\t\(.unicode // false)\t\(.ds // false)\t\(.ds_ext // false)\t\(.ntsync // false)\t\(.pelt // false)\t\(.polly // false)\t\(.lz4_zstd // false)\t\(.zram_writeback // false)\t\(.opt // false)"
             ' <<< "$JSON_BUILD_DATA")
             
             features=()
@@ -1023,7 +1028,7 @@ jobs:
               echo "Warning: No JSON entry found for model: $model" >&2
               features_str="N/A"
             else
-              IFS=$'\t' read -r hmbird susfs bbr bbr3 bbg ttl ip_set unicode ds ntsync pelt <<< "$feature_flags"
+              IFS=$'\t' read -r hmbird susfs bbr bbr3 bbg ttl ip_set unicode ds ds_ext ntsync pelt polly lz4_zstd zram_writeback opt <<< "$feature_flags"
               
               # Build features string based on boolean values
               [[ "$hmbird" == "true" ]] && features+=("🐦 HMBIRD")
@@ -1035,8 +1040,13 @@ jobs:
               [[ "$ip_set" == "true" ]] && features+=("🧱 IP_SET & IPv6 NAT")
               [[ "$unicode" == "true" ]] && features+=("🔧 Unicode Fix")
               [[ "$ds" == "true" ]] && features+=("💻 Droidspaces")
+              [[ "$ds_ext" == "true" ]] && features+=("🖥️ Droidspaces Extended")
               [[ "$ntsync" == "true" ]] && features+=("🔃 NTSync")
               [[ "${pelt:-false}" == "true" ]] && features+=("⚡ reduce_pelt")
+              [[ "$polly" == "true" ]] && features+=("🔮 LLVM POLLY")
+              [[ "$lz4_zstd" == "true" ]] && features+=("📦 LZ4 1.10 & ZSTD")
+              [[ "$zram_writeback" == "true" ]] && features+=("💾 ZRAM Writeback")
+              [[ "$opt" == "true" ]] && features+=("⚡ Memory & CPU Opts")
               
               total=${#features[@]}
               if [ $total -eq 0 ]; then
