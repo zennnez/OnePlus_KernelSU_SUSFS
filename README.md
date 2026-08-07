@@ -47,7 +47,7 @@ Flashing this kernel will not void your warranty, but there is always a risk of 
 > [!IMPORTANT]
 > This builder targets the **OnePlus Pad 3 / OnePlus Pad 2 Pro (CN) (SM8750 / "sun" platform)**, plus an
 > **OnePlus 12 (SM8650 / "pineapple") custom-ROM build** sourced from the community
-> [OnePlus-12-Development](https://github.com/OnePlus-12-Development) kernel fork (`android_kernel_qcom_sm8650` +
+> [OnePlus-12-Development](https://github.com/OnePlus-12-Development) kernel fork (`android_kernel_oneplus_sm8650` +
 > `android_kernel_oneplus_sm8650-modules`) instead of the official OnePlusOSS source. This is intended for use on
 > **custom AOSP-based ROMs** (LineageOS-family), not stock OxygenOS/ColorOS. A15 builds from the `lineage-22.2`
 > split (common + modules) source; A16 builds from `lineage-23.2` on the monolithic

@@ -72,6 +72,11 @@ on:
         description: 'Enter SusFS Branch or commit hash for android16-6.12 (Pad3 A16 - future)'
         type: string
         default: ''
+      feature_overrides:
+        description: 'Override per-device feature toggles for this run only (JSON object, e.g. {"opt":false,"bbr3":false}). Keys: hmbird, susfs, opt, ds, bbg, bbr, bbr3, ttl, ip_set, unicode, ntsync, pelt. Omit a key (or leave this blank / "{}") to keep each device''s configs/*.json value.'
+        required: false
+        type: string
+        default: '{}'
 
 jobs:
   set-op-model:
@@ -435,6 +440,30 @@ jobs:
             ')
           
           rm susfs_lookup_temp.json
+          
+          # Apply per-run feature toggle overrides (workflow_dispatch input), if any.
+          # Any key omitted from the JSON keeps that device's configs/*.json value untouched.
+          overrides_raw='${{ inputs.feature_overrides }}'
+          [ -n "$overrides_raw" ] || overrides_raw='{}'
+          if ! overrides_json=$(echo "$overrides_raw" | jq -c '.' 2>&1); then
+            echo "::error::feature_overrides is not valid JSON: $overrides_raw"
+            exit 1
+          fi
+          allowed_keys='["hmbird","susfs","opt","ds","bbg","bbr","bbr3","ttl","ip_set","unicode","ntsync","pelt"]'
+          if ! bad_keys=$(jq -r --argjson allowed "$allowed_keys" '
+              (keys - $allowed) as $bad | if ($bad | length) > 0 then $bad | join(", ") else empty end
+            ' <<<"$overrides_json"); then
+            echo "::error::Could not validate feature_overrides keys"
+            exit 1
+          fi
+          if [ -n "$bad_keys" ]; then
+            echo "::error::feature_overrides has unsupported key(s): $bad_keys. Allowed: $(jq -r 'join(", ")' <<<"$allowed_keys")"
+            exit 1
+          fi
+          if [ "$overrides_json" != "{}" ]; then
+            echo "ℹ️ Feature overrides for this run: $overrides_json"
+          fi
+          merged_matrix=$(echo "$merged_matrix" | jq --argjson ov "$overrides_json" 'map(. + $ov)')
           
           merged_matrix=$(echo "$merged_matrix" | jq '
             sort_by(

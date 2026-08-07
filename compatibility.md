@@ -15,7 +15,7 @@
 >
 > The **OnePlus 12 (custom ROM)** entry is different from every other device here: instead of the official
 > [OnePlusOSS](https://github.com/OnePlusOSS) source, it builds from the community
-> [OnePlus-12-Development](https://github.com/OnePlus-12-Development) fork (`android_kernel_qcom_sm8650` for the
+> [OnePlus-12-Development](https://github.com/OnePlus-12-Development) fork (`android_kernel_oneplus_sm8650` for the
 > common/GKI kernel, `android_kernel_oneplus_sm8650-modules` for vendor modules/devicetree), on the `lineage-22.2`
 > branch (A15) or the monolithic `android_kernel_oneplus_sm8650` repo on `lineage-23.2` (A16, which already
 > bundles the vendor modules, so no separate modules project is needed for that branch). It is meant for
