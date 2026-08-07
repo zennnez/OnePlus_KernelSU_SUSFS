@@ -1,11 +1,11 @@
 <div align="center">
 
-# 🔥 Wild Kernel for OnePlus Pad 3 (SM8750)
+# 🔥 Wild Kernel for OnePlus Pad 3 / Pad 2 Pro (SM8750)
 
 [![KernelSU-Next](https://img.shields.io/badge/KernelSU_Next-Supported-green)](https://kernelsu-next.github.io/webpage/)
 [![KernelSU](https://img.shields.io/badge/KernelSU-Supported-green)](https://kernelsu.org/)
 [![SUSFS](https://img.shields.io/badge/SUSFS-Integrated-orange?logo=gitlab)](https://gitlab.com/simonpunk/susfs4ksu)
-[![Device](https://img.shields.io/badge/Device-OnePlus_Pad_3-blue)](https://github.com/WildKernels/OnePlus_KernelSU_SUSFS)
+[![Device](https://img.shields.io/badge/Device-OnePlus_Pad_3_%2F_Pad_2_Pro-blue)](https://github.com/WildKernels/OnePlus_KernelSU_SUSFS)
 [![SoC](https://img.shields.io/badge/SoC-Snapdragon_8_Elite_(SM8750)-red)](https://www.qualcomm.com/products/mobile/snapdragon/smartphones/snapdragon-8-series-mobile-platforms/snapdragon-8-elite-mobile-platform)
 
 </div>
@@ -39,11 +39,13 @@ Flashing this kernel will not void your warranty, but there is always a risk of 
 | Device | SoC | Kernel | Android |
 |--------|-----|--------|---------|
 | **OnePlus Pad 3** | Snapdragon 8 Elite (SM8750) | `6.6` | A15 / A16 |
+| **OnePlus Pad 2 Pro** (CN) | Snapdragon 8 Elite (SM8750) | `6.6` | A15 / A16 |
 
 </div>
 
 > [!IMPORTANT]
-> This builder is **exclusively** for the **OnePlus Pad 3 (SM8750 / "sun" platform)**.
+> This builder targets the **OnePlus Pad 3 / OnePlus Pad 2 Pro (CN) (SM8750 / "sun" platform)**.
+> The Pad 2 Pro is the China-market variant of the same hardware later released globally as the Pad 3.
 > It is built from [OnePlus Official Source](https://github.com/OnePlusOSS/) and is expected to work only on **stock OxygenOS ROMs**.
 > Do not flash after a major Android OTA (e.g., A15 → A16) unless verified.
 
@@ -90,6 +92,8 @@ Flashing this kernel will not void your warranty, but there is always a risk of 
 | **OP-PAD-3-SM8750** (A16) | Android 16 | 6.6 (latest) | `oneplus_pad_3_sm8750_w.xml` |
 | **OP-PAD-3-SM8750** (A15) | Android 15 | 6.6 (latest) | `oneplus_pad_3_sm8750_v.xml` |
 | **OP-PAD-3-SM8750-6.6.30** (A15) | Android 15 | 6.6.30 | `oneplus_pad_3_sm8750_6.6.30_v.xml` |
+| **OP-PAD-2-PRO** (A16) | Android 16 | 6.6 (latest) | `oneplus_pad_2_pro_w.xml` |
+| **OP-PAD-2-PRO** (A15) | Android 15 | 6.6 (latest) | `oneplus_pad_2_pro_v.xml` |
 
 </div>
 

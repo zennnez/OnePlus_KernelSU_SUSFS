@@ -1,13 +1,16 @@
-# Compatibility Information: OnePlus Pad 3
+# Compatibility Information: OnePlus Pad 3 / Pad 2 Pro
 
-## 1. Primary Supported Device
+## 1. Primary Supported Devices
 
 | Device Name | Platform / Codename | SoC | Kernel Version | Supported OS Versions |
 |---|---|---|---|---|
 | **OnePlus Pad 3** | `SM8750` / `sun` | Snapdragon 8 Elite | `6.6.x` | Android 15 (OxygenOS 15) <br> Android 16 (OxygenOS 16) |
+| **OnePlus Pad 2 Pro** (CN) | `SM8750` / `sun` | Snapdragon 8 Elite | `6.6.x` | Android 15 (ColorOS 15) <br> Android 16 (ColorOS 16) |
 
 > [!NOTE]
-> All kernels are compiled directly using official [OnePlusOSS](https://github.com/OnePlusOSS) kernel source manifests (`android_kernel_common_oneplus_sm8750` & `android_kernel_modules_and_devicetree_oneplus_sm8750`).
+> All kernels are compiled directly using official [OnePlusOSS](https://github.com/OnePlusOSS) kernel source manifests (`android_kernel_common_oneplus_sm8750` & `android_kernel_modules_and_devicetree_oneplus_sm8750`), using the device-specific `pad_3` / `pad_2_pro` source branches.
+>
+> The OnePlus Pad 2 Pro (CN) is the same SM8750/"sun" hardware later sold globally as the OnePlus Pad 3, but ships its own OnePlusOSS kernel source branch (ColorOS-based) rather than sharing the Pad 3 branch — so it is built as a separate config/manifest pair.
 
 ---
 
