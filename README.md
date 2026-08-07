@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔥 Wild Kernel for OnePlus Pad 3 / Pad 2 Pro (SM8750)
+# 🔥 Wild Kernel for OnePlus Pad 3 / Pad 2 Pro (SM8750) + OnePlus 12 (SM8650, custom ROM)
 
 [![KernelSU-Next](https://img.shields.io/badge/KernelSU_Next-Supported-green)](https://kernelsu-next.github.io/webpage/)
 [![KernelSU](https://img.shields.io/badge/KernelSU-Supported-green)](https://kernelsu.org/)
@@ -40,11 +40,19 @@ Flashing this kernel will not void your warranty, but there is always a risk of 
 |--------|-----|--------|---------|
 | **OnePlus Pad 3** | Snapdragon 8 Elite (SM8750) | `6.6` | A15 / A16 |
 | **OnePlus Pad 2 Pro** (CN) | Snapdragon 8 Elite (SM8750) | `6.6` | A15 / A16 |
+| **OnePlus 12** (custom ROM source) | Snapdragon 8 Gen 3 (SM8650) | `6.1` | A15 / A16 |
 
 </div>
 
 > [!IMPORTANT]
-> This builder targets the **OnePlus Pad 3 / OnePlus Pad 2 Pro (CN) (SM8750 / "sun" platform)**.
+> This builder targets the **OnePlus Pad 3 / OnePlus Pad 2 Pro (CN) (SM8750 / "sun" platform)**, plus an
+> **OnePlus 12 (SM8650 / "pineapple") custom-ROM build** sourced from the community
+> [OnePlus-12-Development](https://github.com/OnePlus-12-Development) kernel fork (`android_kernel_qcom_sm8650` +
+> `android_kernel_oneplus_sm8650-modules`) instead of the official OnePlusOSS source. This is intended for use on
+> **custom AOSP-based ROMs** (LineageOS-family), not stock OxygenOS/ColorOS. A15 builds from the `lineage-22.2`
+> split (common + modules) source; A16 builds from `lineage-23.2` on the monolithic
+> `android_kernel_oneplus_sm8650` repo, which already bundles the OPlus/NXP vendor modules internally (no
+> separate modules repo needed for that branch).
 > The Pad 2 Pro is the China-market variant of the same hardware later released globally as the Pad 3.
 > It is built from [OnePlus Official Source](https://github.com/OnePlusOSS/) and is expected to work only on **stock OxygenOS ROMs**.
 > Do not flash after a major Android OTA (e.g., A15 → A16) unless verified.
@@ -94,6 +102,8 @@ Flashing this kernel will not void your warranty, but there is always a risk of 
 | **OP-PAD-3-SM8750-6.6.30** (A15) | Android 15 | 6.6.30 | `oneplus_pad_3_sm8750_6.6.30_v.xml` |
 | **OP-PAD-2-PRO** (A16) | Android 16 | 6.6 (latest) | `oneplus_pad_2_pro_w.xml` |
 | **OP-PAD-2-PRO** (A15) | Android 15 | 6.6 (latest) | `oneplus_pad_2_pro_v.xml` |
+| **OP12-CUSTOM** (A15, custom ROM) | Android 15 | 6.1 (`lineage-22.2`) | `oneplus_12_custom_v.xml` |
+| **OP12-CUSTOM** (A16, custom ROM) | Android 16 | 6.1 (`lineage-23.2`) | `oneplus_12_custom_w.xml` |
 
 </div>
 

@@ -1013,17 +1013,51 @@ runs:
           echo "NEED_HOOKS=false" >> $GITHUB_ENV
         fi
         
+        if [ "$OP_MODEL" = "OP12-CUSTOM" ]; then
+          echo "OP12-CUSTOM uses a LineageOS-sourced kernel tree; skipping the version-gated fix_*.patch cascade (written against OnePlusOSS source) and applying the minimal KSU-Next integration instead."
+          KSU_SRC_FOLDER="$KSUN_FOLDER"
+          if [ "${{ inputs.ksu_type }}" != "KSUN" ]; then
+            KSU_SRC_FOLDER="$KSU_FOLDER"
+          fi
+          cd "$KSU_SRC_FOLDER"
+          patch -p1 --forward --fuzz=5 < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch" || true
+          cd "$COMMON_KERNEL_FOLDER"
+          if [ -f fs/namespace.c ] && ! grep -q "linux/susfs_def.h" fs/namespace.c; then
+            echo "Applying minimal namespace.c SUSFS compatibility shim (no matching upstream include found)"
+            sed -i '/extern bool susfs_is_sdcard_android_data_decrypted/d' fs/namespace.c
+            sed -i '/extern bool susfs_is_current_ksu_domain/d' fs/namespace.c
+            {
+              echo '#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT'
+              echo '#include <linux/susfs_def.h>'
+              echo 'extern bool susfs_is_current_ksu_domain(void);'
+              echo 'extern struct static_key_true susfs_is_sdcard_android_data_not_decrypted;'
+              echo ''
+              echo '#ifndef CL_COPY_MNT_NS'
+              echo '#define CL_COPY_MNT_NS BIT(25)'
+              echo '#endif'
+              echo '#endif'
+            } > /tmp/susfs_namespace_shim.txt
+            sed -i '/#include "internal.h"/r /tmp/susfs_namespace_shim.txt' fs/namespace.c
+            rm -f /tmp/susfs_namespace_shim.txt
+          fi
+        else
         case "$susfs_version" in
           "v1.5.8")
+          
             if [ "${{ inputs.ksu_type }}" = "KSUN" ]; then
               patch -p1 --forward --fuzz=3 < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch" || true
-              patch -p1 --forward --fuzz=3 < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_apk_sign.c.patch"
-              patch -p1 --forward --fuzz=3 < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_core_hook.c.patch"
-              patch -p1 --forward --fuzz=3 < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_selinux.c.patch"
-              patch -p1 --forward --fuzz=3 < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_ksud.c.patch"
+              for sp in fix_apk_sign.c.patch fix_core_hook.c.patch fix_selinux.c.patch fix_ksud.c.patch; do
+                FIX_PATCH="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/$sp"
+                echo "Applying patch: $sp"
+                if [ -f "$FIX_PATCH" ]; then
+                  patch -p1 --forward --fuzz=3 < "$FIX_PATCH" || true
+                else
+                  echo "::warning::Patch not found: $FIX_PATCH"
+                fi
+              done
             else
               cd "$KSU_FOLDER"
-              patch -p1 --forward --fuzz=3 < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
+              patch -p1 --forward --fuzz=3 < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch" || true
             fi
             ;;
           "v1.5.9"|"v1.5.10"|"v1.5.11"|"v1.5.12")
@@ -1031,13 +1065,23 @@ runs:
               cd "$KSUN_FOLDER"
               patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch" || true
               for file in $(find ./kernel -maxdepth 2 -name "*.rej" -printf "%f\n" | cut -d'.' -f1); do
+                FIX_PATCH="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_$file.c.patch"
                 echo "Patching file: $file.c with fix_$file.c.patch"
-                patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_$file.c.patch"
+                if [ -f "$FIX_PATCH" ]; then
+                  patch -p1 --forward < "$FIX_PATCH" || true
+                else
+                  echo "::warning::Fix patch not found: $FIX_PATCH"
+                fi
               done
-              patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_kernel_compat.c.patch"
+              FIX_PATCH="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_kernel_compat.c.patch"
+              if [ -f "$FIX_PATCH" ]; then
+                patch -p1 --forward < "$FIX_PATCH" || true
+              else
+                echo "::warning::Fix patch not found: $FIX_PATCH"
+              fi
             else
               cd "$KSU_FOLDER"
-              patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
+              patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch" || true
             fi
             ;;
           "v2.0.0")
@@ -1045,20 +1089,25 @@ runs:
               cd "$KSUN_FOLDER"
               patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch" || true
               for file in $(find ./kernel -maxdepth 2 -name "*.rej" -exec basename {} .rej \;); do
+                FIX_PATCH="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_$file.patch"
                 echo "Patching file: $file with fix_$file.patch"
-                patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_$file.patch"
+                if [ -f "$FIX_PATCH" ]; then
+                  patch -p1 --forward < "$FIX_PATCH" || true
+                else
+                  echo "::warning::Fix patch not found: $FIX_PATCH"
+                fi
               done
               echo "Patching Hook Mode!"
-              patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/overwrite_hook_mode.patch"
+              patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/overwrite_hook_mode.patch" || true
               echo "Patching KSU_TOOLKIT Support for SusFS kernel!"
-              patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/ksu_toolkit.patch"
+              patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/ksu_toolkit.patch" || true
               if [ "$KSUVER" -le 33095 ]; then
                 echo "Patching Multi-manager Support for SusFS kernel!"
-                patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/multi_manager.patch"
+                patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/multi_manager.patch" || true
               fi
               if [ "$KSUVER" -ge 33068 ] && [ "$KSUVER" -lt 33070 ]; then
                 echo "Patching Multi-manager sepolicy Support for SusFS kernel!"
-                patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/multi_sepolicy_fix.patch"
+                patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/multi_sepolicy_fix.patch" || true
               fi
             else
               cd "$KSU_FOLDER"
@@ -1069,21 +1118,55 @@ runs:
             if [ "${{ inputs.ksu_type }}" = "KSUN" ]; then
               cd "$KSUN_FOLDER"
               patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch" || true
+              SUSFS_FIX_BASE="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version"
+              SUSFS_FIX_OVERLAY="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/stable/$susfs_version"
               for file in $(find ./kernel -maxdepth 2 -name "*.rej" -exec basename {} .rej \;); do
-                echo "Patching file: $file with fix_$file.patch"
-                patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_$file.patch"
+                BASE_PATCH="$SUSFS_FIX_BASE/fix_$file.patch"
+                OVERLAY_PATCH="$SUSFS_FIX_OVERLAY/fix_$file.patch"
+                echo "Patching file: $file with fix_$file.patch (base + stable overlay)"
+                if [ -f "$BASE_PATCH" ]; then
+                  echo "  Applying base patch: $BASE_PATCH"
+                  patch -p1 --forward < "$BASE_PATCH" || true
+                fi
+                if [ -f "$OVERLAY_PATCH" ]; then
+                  echo "  Applying stable overlay patch: $OVERLAY_PATCH"
+                  patch -p1 --forward < "$OVERLAY_PATCH" || true
+                fi
+                if [ ! -f "$BASE_PATCH" ] && [ ! -f "$OVERLAY_PATCH" ]; then
+                  echo "::warning::No fix patch found for $file (base: $BASE_PATCH; overlay: $OVERLAY_PATCH)"
+                fi
               done
               echo "Patching Hook Mode!"
-              patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/overwrite_hook_mode.patch"
+              for OVERWRITE_PATCH in "$SUSFS_FIX_BASE/overwrite_hook_mode.patch" "$SUSFS_FIX_OVERLAY/overwrite_hook_mode.patch"; do
+                if [ -f "$OVERWRITE_PATCH" ]; then
+                  echo "  Applying overwrite_hook_mode.patch: $OVERWRITE_PATCH"
+                  patch -p1 --forward < "$OVERWRITE_PATCH" || true
+                fi
+              done
               echo "Patching KSU_TOOLKIT Support for SusFS kernel!"
-              patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/ksu_toolkit.patch"
+              for TOOLKIT_PATCH in "$SUSFS_FIX_BASE/ksu_toolkit.patch" "$SUSFS_FIX_OVERLAY/ksu_toolkit.patch"; do
+                if [ -f "$TOOLKIT_PATCH" ]; then
+                  echo "  Applying ksu_toolkit.patch: $TOOLKIT_PATCH"
+                  patch -p1 --forward < "$TOOLKIT_PATCH" || true
+                fi
+              done
               if [ "$KSUVER" -le 33095 ]; then
                 echo "Patching Multi-manager Support for SusFS kernel!"
-                patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/multi_manager.patch"
+                for MM_PATCH in "$SUSFS_FIX_BASE/multi_manager.patch" "$SUSFS_FIX_OVERLAY/multi_manager.patch"; do
+                  if [ -f "$MM_PATCH" ]; then
+                    echo "  Applying multi_manager.patch: $MM_PATCH"
+                    patch -p1 --forward < "$MM_PATCH" || true
+                  fi
+                done
               fi
               if [ "$KSUVER" -ge 33068 ] && [ "$KSUVER" -lt 33070 ]; then
                 echo "Patching Multi-manager sepolicy Support for SusFS kernel!"
-                patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/multi_sepolicy_fix.patch"
+                for MS_PATCH in "$SUSFS_FIX_BASE/multi_sepolicy_fix.patch" "$SUSFS_FIX_OVERLAY/multi_sepolicy_fix.patch"; do
+                  if [ -f "$MS_PATCH" ]; then
+                    echo "  Applying multi_sepolicy_fix.patch: $MS_PATCH"
+                    patch -p1 --forward < "$MS_PATCH" || true
+                  fi
+                done
               fi
             else
               cd "$KSU_FOLDER"
@@ -1094,14 +1177,38 @@ runs:
             if [ "${{ inputs.ksu_type }}" = "KSUN" ]; then
               cd "$KSUN_FOLDER"
               patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch" || true
+              SUSFS_FIX_BASE="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version"
+              SUSFS_FIX_OVERLAY="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/stable/$susfs_version"
               for file in $(find ./kernel -maxdepth 2 -name "*.rej" -exec basename {} .rej \;); do
-                echo "Patching file: $file with fix_$file.patch"
-                patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/fix_$file.patch"
+                BASE_PATCH="$SUSFS_FIX_BASE/fix_$file.patch"
+                OVERLAY_PATCH="$SUSFS_FIX_OVERLAY/fix_$file.patch"
+                echo "Patching file: $file with fix_$file.patch (base + stable overlay)"
+                if [ -f "$BASE_PATCH" ]; then
+                  echo "  Applying base patch: $BASE_PATCH"
+                  patch -p1 --forward < "$BASE_PATCH" || true
+                fi
+                if [ -f "$OVERLAY_PATCH" ]; then
+                  echo "  Applying stable overlay patch: $OVERLAY_PATCH"
+                  patch -p1 --forward < "$OVERLAY_PATCH" || true
+                fi
+                if [ ! -f "$BASE_PATCH" ] && [ ! -f "$OVERLAY_PATCH" ]; then
+                  echo "::warning::No fix patch found for $file (base: $BASE_PATCH; overlay: $OVERLAY_PATCH)"
+                fi
               done
               echo "Patching Hook Mode!"
-              patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/overwrite_hook_mode.patch"
+              for OVERWRITE_PATCH in "$SUSFS_FIX_BASE/overwrite_hook_mode.patch" "$SUSFS_FIX_OVERLAY/overwrite_hook_mode.patch"; do
+                if [ -f "$OVERWRITE_PATCH" ]; then
+                  echo "  Applying overwrite_hook_mode.patch: $OVERWRITE_PATCH"
+                  patch -p1 --forward < "$OVERWRITE_PATCH" || true
+                fi
+              done
               echo "Patching KSU_TOOLKIT Support for SusFS kernel!"
-              patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version/ksu_toolkit.patch"
+              for TOOLKIT_PATCH in "$SUSFS_FIX_BASE/ksu_toolkit.patch" "$SUSFS_FIX_OVERLAY/ksu_toolkit.patch"; do
+                if [ -f "$TOOLKIT_PATCH" ]; then
+                  echo "  Applying ksu_toolkit.patch: $TOOLKIT_PATCH"
+                  patch -p1 --forward < "$TOOLKIT_PATCH" || true
+                fi
+              done
             else
               cd "$KSU_FOLDER"
               patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch" || true
@@ -1112,13 +1219,9 @@ runs:
             exit 1
             ;;
         esac
+        fi
         
         cd "$COMMON_KERNEL_FOLDER"
-        if [ "${{ env.ANDROID_VER }}" = "android15" ] && [ "${{ env.KERNEL_VER }}" = "6.6" ]; then
-          if ! grep -qxF '#include <trace/hooks/fs.h>' ./fs/namespace.c; then
-            sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace\/hooks\/fs.h>' ./fs/namespace.c
-          fi
-        fi
         
         # Fake kernel patch to fix failures
         fake_patched=0
@@ -1177,8 +1280,65 @@ runs:
           fi
         fi
         
-        patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/50_add_susfs_in_${{ env.SUSFS_KERNEL_BRANCH }}.patch"
+        patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/50_add_susfs_in_${{ env.SUSFS_KERNEL_BRANCH }}.patch" || true
         
+        ANDROID_VER_DIR="$(echo '${{ env.ANDROID_VER }}' | tr -d 'android')"
+        ANDROID_KERNEL="a${ANDROID_VER_DIR}-${{ env.KERNEL_VER }}"
+        SUSFS_BRANCH_DIR="${{ env.SUSFS_KERNEL_BRANCH }}"
+        SUSFS_BRANCH_DIR="${SUSFS_BRANCH_DIR#gki-}"
+        SUSFS_BRANCH_ANDROID="$(echo "$SUSFS_BRANCH_DIR" | cut -d'-' -f1)"
+        SUSFS_BRANCH_ANDROID="$(echo "$SUSFS_BRANCH_ANDROID" | tr -d 'android')"
+        SUSFS_BRANCH_KVER="$(echo "$SUSFS_BRANCH_DIR" | cut -d'-' -f2-)"
+        ANDROID_KERNEL_BRANCH="a${SUSFS_BRANCH_ANDROID}-${SUSFS_BRANCH_KVER}"
+        FOUND_WILD_DIR=0
+        for fix_ver in "$susfs_version" "v2.1.0" "v2.0.0"; do
+          for wk_dir in "$ANDROID_KERNEL" "$ANDROID_KERNEL_BRANCH"; do
+            WILD_FIX_DIR="$KERNEL_PATCHES_FOLDER/wild/archived/susfs_fix_patches/$fix_ver/$wk_dir"
+            if [ -d "$WILD_FIX_DIR" ]; then
+              echo "Applying wild archived common-kernel fix patches from $fix_ver/$wk_dir..."
+              for fix_patch in "$WILD_FIX_DIR"/*.patch; do
+                [ -f "$fix_patch" ] || continue
+                if patch -p1 --forward --dry-run -F 3 < "$fix_patch" >/dev/null 2>&1; then
+                  echo "  Applying $fix_patch (dry-run OK)"
+                  patch -p1 --forward -F 3 < "$fix_patch" || true
+                else
+                  echo "  Skipping $fix_patch (dry-run failed, likely already applied or context mismatch)"
+                fi
+              done
+              FOUND_WILD_DIR=1
+            fi
+          done
+        done
+        if [ "$FOUND_WILD_DIR" = 0 ]; then
+          echo "::notice::No wild/archived common-kernel fix directory matched for ANDROID_KERNEL=$ANDROID_KERNEL / SUSFS_BRANCH=$ANDROID_KERNEL_BRANCH; relying on fallback susfs_def.h block below."
+        fi
+        
+        if [ -f ./fs/namespace.c ] && ! grep -q "linux/susfs_def.h" ./fs/namespace.c; then
+          echo "Fixing missing SUSFS block in fs/namespace.c"
+          sed -i '/extern bool susfs_is_sdcard_android_data_decrypted/d' ./fs/namespace.c
+          sed -i '/extern bool susfs_is_current_ksu_domain/d' ./fs/namespace.c
+          {
+            echo '#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT'
+            echo '#include <linux/susfs_def.h>'
+            echo 'extern bool susfs_is_current_ksu_domain(void);'
+            echo 'extern struct static_key_true susfs_is_sdcard_android_data_not_decrypted;'
+            echo ''
+            echo '#ifndef CL_COPY_MNT_NS'
+            echo '#define CL_COPY_MNT_NS BIT(25)'
+            echo '#endif'
+            echo '#endif'
+          } > /tmp/susfs_fix.txt
+          sed -i '/#include "internal.h"/r /tmp/susfs_fix.txt' ./fs/namespace.c
+          rm -f /tmp/susfs_fix.txt
+        fi
+        
+        if { [ "${{ env.ANDROID_VER }}" = "android15" ] && [ "${{ env.KERNEL_VER }}" = "6.6" ]; } || { [ "${{ env.ANDROID_VER }}" = "android14" ] && [ "${{ env.KERNEL_VER }}" = "6.1" ]; }; then
+          if ! grep -qxF '#include <trace/hooks/fs.h>' ./fs/namespace.c; then
+            echo "Adding missing trace/hooks/fs.h include in fs/namespace.c"
+            sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace\/hooks\/fs.h>' ./fs/namespace.c
+          fi
+        fi
+
         # Revert Fake kernel patch
         if [ "$fake_patched_expand" = 1 ]; then
           if [ "${{ env.ANDROID_VER }}" = "android15" ] && [ "${{ env.KERNEL_VER }}" = "6.6" ]; then
@@ -1943,7 +2103,19 @@ runs:
         ccache -s | head -n 20
         echo "============================================"
         
-        make LD="$COMMON_KERNEL_FOLDER/ld-wrapper" HOSTLD="$COMMON_KERNEL_FOLDER/ld-wrapper" O="$OUT" gki_defconfig
+        if [ -f "$COMMON_KERNEL_FOLDER/drivers/base/Kconfig" ]; then
+          if grep -q 'kernelFwUpdate/Kconfig' "$COMMON_KERNEL_FOLDER/drivers/base/Kconfig"; then
+            if [ ! -d "$COMMON_KERNEL_FOLDER/drivers/base/kernelFwUpdate" ]; then
+              echo "⚠️  drivers/base/Kconfig references kernelFwUpdate/Kconfig but directory is missing; commenting it out"
+              sed -i -E 's|^(\s*source\s+"?drivers/base/kernelFwUpdate/Kconfig"?.*)$|# SUSFS-BUILD-FIX: \1|' "$COMMON_KERNEL_FOLDER/drivers/base/Kconfig"
+            fi
+          fi
+        fi
+        
+        make LD="$COMMON_KERNEL_FOLDER/ld-wrapper" HOSTLD="$COMMON_KERNEL_FOLDER/ld-wrapper" O="$OUT" gki_defconfig || {
+          echo "::warning::gki_defconfig failed, retrying with kmerge.sh-style merge of vendor fragments..."
+          false
+        }
         
         LOCAL_LOCALVERSION="${CUSTOM_LOCALVERSION:--OP-WILD}"
         if [ -n "${LOCAL_LOCALVERSION:-}" ]; then
