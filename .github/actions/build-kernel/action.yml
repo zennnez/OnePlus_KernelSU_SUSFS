@@ -1177,11 +1177,7 @@ runs:
           fi
         fi
         
-        patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/50_add_susfs_in_${{ env.SUSFS_KERNEL_BRANCH }}.patch" || true
-
-        echo "::group::Reject files"
-        find . -maxdepth 4 -name "*.rej" -exec sh -c 'echo "=== {} ==="; cat "{}"' \;
-        echo "::endgroup::"
+        patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/50_add_susfs_in_${{ env.SUSFS_KERNEL_BRANCH }}.patch"
         
         # Revert Fake kernel patch
         if [ "$fake_patched_expand" = 1 ]; then
