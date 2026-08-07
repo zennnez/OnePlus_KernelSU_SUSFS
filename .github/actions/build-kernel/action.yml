@@ -2218,23 +2218,29 @@ runs:
         ccache -s | head -n 20
         echo "============================================"
         
-        if [ -d "$COMMON_KERNEL_FOLDER/drivers" ]; then
-          while read -r kconfig_file; do
-            [ -f "$kconfig_file" ] || continue
-            kconfig_dir=$(dirname "$kconfig_file")
-            (grep -E '^\s*(source|rsource)\s+.*Kconfig' "$kconfig_file" 2>/dev/null || true) | while read -r line; do
-              [ -n "$line" ] || continue
-              rel_path=$(echo "$line" | sed -nE 's/^\s*(source|rsource)\s+"?([^"#\s]+\bKconfig)"?.*/\2/p')
-              if [ -n "$rel_path" ]; then
-                if [ ! -f "$COMMON_KERNEL_FOLDER/$rel_path" ] && [ ! -f "$kconfig_dir/$rel_path" ] && [ ! -f "$rel_path" ]; then
-                  echo "⚠️  $(basename "$kconfig_file") references missing file '$rel_path'; commenting it out"
-                  safe_rel_path=$(printf '%s\n' "$rel_path" | sed 's/[[\.*^$]/\\&/g')
-                  sed -i -E 's|^(\s*(source|rsource)\s+"?'"$safe_rel_path"'"?.*)$|# SUSFS-BUILD-FIX: \1|' "$kconfig_file" || true
-                fi
-              fi
-            done
-          done < <(find "$COMMON_KERNEL_FOLDER/drivers" -name "Kconfig" 2>/dev/null || true)
-        fi
+        # --- Kconfig missing-source stub creator ---
+        # For every source/rsource directive pointing at a missing file, create
+        # an empty Kconfig stub so kconfig doesn't abort.  This is safer than
+        # trying to comment out the directive (which risks corrupting help text).
+        echo "Scanning kernel tree for missing Kconfig source references..."
+        missing_stubs=0
+        while read -r kconfig_file; do
+          [ -f "$kconfig_file" ] || continue
+          # Only lines that are genuine source directives ending in "Kconfig"
+          (grep -nE '^\s*(source|rsource)\s+".+Kconfig"' "$kconfig_file" 2>/dev/null || true) | while IFS= read -r match; do
+            rel_path=$(printf '%s' "$match" | sed -nE 's/^[0-9]+:\s*(source|rsource)\s+"([^"]+Kconfig)".*/\2/p')
+            [ -n "$rel_path" ] || continue
+            abs_path="$COMMON_KERNEL_FOLDER/$rel_path"
+            if [ ! -f "$abs_path" ]; then
+              parent_dir=$(dirname "$abs_path")
+              mkdir -p "$parent_dir"
+              : > "$abs_path"
+              echo "  📝 Created stub: $rel_path"
+              missing_stubs=$((missing_stubs + 1))
+            fi
+          done
+        done < <(find "$COMMON_KERNEL_FOLDER" -name "Kconfig" -not -path "*/.git/*" 2>/dev/null || true)
+        echo "Kconfig stub scan complete."
         
         make LD="$COMMON_KERNEL_FOLDER/ld-wrapper" HOSTLD="$COMMON_KERNEL_FOLDER/ld-wrapper" O="$OUT" gki_defconfig || {
           echo "::warning::gki_defconfig failed, retrying with kmerge.sh-style merge of vendor fragments..."
