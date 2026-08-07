@@ -2264,6 +2264,20 @@ runs:
         ccache -s | head -n 20
         echo "============================================"
         
+        # Fix missing key_pass in certs/extract-cert.c or scripts/extract-cert.c on OpenSSL 3.0
+        for f in certs/extract-cert.c scripts/extract-cert.c; do
+          if [ -f "$f" ]; then
+            echo "Patching OpenSSL 3.0 extract-cert in $f..."
+            # 1. Strip any existing scoped key_pass declarations that might be hidden inside #ifdef
+            sed -i '/static const char \*key_pass/d' "$f" 2>/dev/null || true
+            sed -i '/const char \*key_pass/d' "$f" 2>/dev/null || true
+            # 2. Insert static const char *key_pass = NULL; at the top of the file
+            sed -i '1i static const char *key_pass = NULL;' "$f" 2>/dev/null || true
+            # 3. Guard if (key_pass) block with #ifdef USE_PKCS11_ENGINE
+            sed -i 's/if (key_pass)/#ifdef USE_PKCS11_ENGINE\n\tif (key_pass)\n#else\n\tif (0)\n#endif/' "$f" 2>/dev/null || true
+          fi
+        done
+
         # --- Kconfig missing-source stub creator ---
         # For every source/rsource directive pointing at a missing file, create
         # an empty Kconfig stub so kconfig doesn't abort.
