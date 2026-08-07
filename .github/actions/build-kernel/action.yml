@@ -2219,19 +2219,21 @@ runs:
         echo "============================================"
         
         if [ -d "$COMMON_KERNEL_FOLDER/drivers" ]; then
-          find "$COMMON_KERNEL_FOLDER/drivers" -name "Kconfig" 2>/dev/null | while read -r kconfig_file; do
+          while read -r kconfig_file; do
             [ -f "$kconfig_file" ] || continue
             kconfig_dir=$(dirname "$kconfig_file")
-            grep -E '^\s*r?source\s+' "$kconfig_file" 2>/dev/null | while read -r line; do
+            (grep -E '^\s*r?source\s+' "$kconfig_file" 2>/dev/null || true) | while read -r line; do
+              [ -n "$line" ] || continue
               rel_path=$(echo "$line" | sed -nE 's/^\s*r?source\s+"?([^"#]+)"?.*/\1/p')
-              [ -n "$rel_path" ] || continue
-              if [ ! -f "$COMMON_KERNEL_FOLDER/$rel_path" ] && [ ! -f "$kconfig_dir/$rel_path" ] && [ ! -f "$rel_path" ]; then
-                echo "⚠️  $(basename "$kconfig_file") references missing file '$rel_path'; commenting it out"
-                safe_rel_path=$(printf '%s\n' "$rel_path" | sed 's/[[\.*^$]/\\&/g')
-                sed -i -E 's|^(\s*r?source\s+"?'"$safe_rel_path"'"?.*)$|# SUSFS-BUILD-FIX: \1|' "$kconfig_file"
+              if [ -n "$rel_path" ]; then
+                if [ ! -f "$COMMON_KERNEL_FOLDER/$rel_path" ] && [ ! -f "$kconfig_dir/$rel_path" ] && [ ! -f "$rel_path" ]; then
+                  echo "⚠️  $(basename "$kconfig_file") references missing file '$rel_path'; commenting it out"
+                  safe_rel_path=$(printf '%s\n' "$rel_path" | sed 's/[[\.*^$]/\\&/g')
+                  sed -i -E 's|^(\s*r?source\s+"?'"$safe_rel_path"'"?.*)$|# SUSFS-BUILD-FIX: \1|' "$kconfig_file" || true
+                fi
               fi
             done
-          done
+          done < <(find "$COMMON_KERNEL_FOLDER/drivers" -name "Kconfig" 2>/dev/null || true)
         fi
         
         make LD="$COMMON_KERNEL_FOLDER/ld-wrapper" HOSTLD="$COMMON_KERNEL_FOLDER/ld-wrapper" O="$OUT" gki_defconfig || {
