@@ -2264,6 +2264,16 @@ runs:
         ccache -s | head -n 20
         echo "============================================"
         
+        # Fix missing key_pass in certs/extract-cert.c or scripts/extract-cert.c
+        for f in certs/extract-cert.c scripts/extract-cert.c; do
+          if [ -f "$f" ]; then
+            if ! grep -q 'static const char \*key_pass' "$f"; then
+              echo "Fixing missing key_pass declaration in $f..."
+              sed -i '1i static const char *key_pass = NULL;' "$f" || true
+            fi
+          fi
+        done
+
         # --- Kconfig missing-source stub creator ---
         # For every source/rsource directive pointing at a missing file, create
         # an empty Kconfig stub so kconfig doesn't abort.
