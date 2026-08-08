@@ -38,7 +38,7 @@
 
 | Feature | A15 | A16 | Notes |
 |---------|-----|-----|-------|
-| KernelSU / KernelSU-Next | ✅ | ✅ | Inline GKI hooks |
+| SukiSU Ultra / ReSukiSU / KernelSU-Next / KSU | ✅ | ✅ | Inline GKI hooks, built-in SUSFS support with SukiSU |
 | SUSFS | ✅ | ✅ | Full `sus_path`, `sus_mount`, `sus_kstat`, `open_redirect`, `sus_map` |
 | Enhanced SUSFS (51_) | ✅ | ✅ | Kstat redirect, unicode filter, buffer hardening |
 | ZeroMount VFS | ❌ | ✅ | VFS path injection, bloom filter ioctl engine |

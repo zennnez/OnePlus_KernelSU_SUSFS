@@ -10,8 +10,11 @@ inputs:
     required: true
     type: choice
     options:
+      - SUKISU
       - KSUN
+      - RESUKISU
       - KSU
+      - WKSU
   ksu_branch_or_hash:
     description: 'KSU branch or commit hash (empty = auto-detect by ksu_type)'
     required: false
@@ -997,6 +1000,116 @@ runs:
         echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
         echo "KernelSU Version: $KSU_VERSION"
         echo "✅ KernelSU added (commit: ${KSU_COMMIT_SHA:0:8})"
+    - name: Add SukiSU Ultra
+      shell: bash
+      if: ${{ inputs.ksu_type == 'SUKISU' || inputs.ksu_type == 'SUKISU_ULTRA' }}
+      run: |
+        set -euo pipefail
+        echo "::group::Add SukiSU Ultra"
+        cd "$KERNEL_PLATFORM_FOLDER"
+        echo "Adding SukiSU Ultra..."
+        curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
+        git submodule update --init --recursive 2>/dev/null || true
+        
+        cd KernelSU/kernel
+        KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD 2>/dev/null || echo 0) "+" 30000)
+        sed -i "s/DKSU_VERSION=16/DKSU_VERSION=${KSU_VERSION}/" Makefile 2>/dev/null || true
+        
+        if [ -f ksu.c ]; then
+          sed -i 's/#if defined(CONFIG_STACKPROTECTOR) && (defined(CONFIG_ARM64) && !defined(CONFIG_STACKPROTECTOR_PER_TASK))/#if 0/' ksu.c
+        fi
+        
+        cd "$KERNEL_PLATFORM_FOLDER"
+        SUPERCALLS="KernelSU/kernel/supercalls.c"
+        [ ! -f "$SUPERCALLS" ] && SUPERCALLS="$COMMON_KERNEL_FOLDER/drivers/kernelsu/supercalls.c"
+        if [ -f "$SUPERCALLS" ]; then
+          sed -i '/ksu_mark_running_process/d' "$SUPERCALLS"
+          if grep -q "vzalloc" "$SUPERCALLS" && ! head -5 "$SUPERCALLS" | grep -q "vmalloc.h"; then
+            sed -i '1a #include <linux/vmalloc.h>' "$SUPERCALLS"
+          fi
+        fi
+        
+        KSU_COMMIT_SHA=$(git -C KernelSU rev-parse HEAD 2>/dev/null || echo "unknown")
+        echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
+        echo "NEED_HOOKS=false" >> $GITHUB_ENV
+        
+        cat >> "$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig" <<EOF
+CONFIG_KSU=y
+CONFIG_KSU_SUSFS=y
+EOF
+        
+        echo "SUKISU" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "$KSU_VERSION" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+        echo "SukiSU Ultra Version: $KSU_VERSION"
+        echo "✅ SukiSU Ultra added (commit: ${KSU_COMMIT_SHA:0:8})"
+        echo "::endgroup::"
+
+    - name: Add ReSukiSU
+      shell: bash
+      if: ${{ inputs.ksu_type == 'RESUKISU' }}
+      run: |
+        set -euo pipefail
+        echo "::group::Add ReSukiSU"
+        cd "$KERNEL_PLATFORM_FOLDER"
+        echo "Adding ReSukiSU..."
+        curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s susfs-ksud
+        git submodule update --init --recursive 2>/dev/null || true
+        
+        cd KernelSU/kernel
+        KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD 2>/dev/null || echo 0) "+" 30000)
+        sed -i "s/DKSU_VERSION=16/DKSU_VERSION=${KSU_VERSION}/" Makefile 2>/dev/null || true
+        
+        if [ -f ksu.c ]; then
+          sed -i 's/#if defined(CONFIG_STACKPROTECTOR) && (defined(CONFIG_ARM64) && !defined(CONFIG_STACKPROTECTOR_PER_TASK))/#if 0/' ksu.c
+        fi
+        
+        cd "$KERNEL_PLATFORM_FOLDER"
+        KSU_COMMIT_SHA=$(git -C KernelSU rev-parse HEAD 2>/dev/null || echo "unknown")
+        echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
+        echo "NEED_HOOKS=false" >> $GITHUB_ENV
+        
+        cat >> "$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig" <<EOF
+CONFIG_KSU=y
+CONFIG_KSU_SUSFS=y
+EOF
+        
+        echo "RESUKISU" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "$KSU_VERSION" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+        echo "ReSukiSU Version: $KSU_VERSION"
+        echo "✅ ReSukiSU added (commit: ${KSU_COMMIT_SHA:0:8})"
+        echo "::endgroup::"
+
+    - name: Add WildKSU
+      shell: bash
+      if: ${{ inputs.ksu_type == 'WKSU' }}
+      run: |
+        set -euo pipefail
+        echo "::group::Add WildKSU"
+        cd "$KERNEL_PLATFORM_FOLDER"
+        echo "Adding WildKSU..."
+        curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/WildKernels/Wild_KSU/main/kernel/setup.sh" | bash -
+        git submodule update --init --recursive 2>/dev/null || true
+        
+        cd KernelSU/kernel 2>/dev/null || cd "$COMMON_KERNEL_FOLDER/drivers/kernelsu"
+        KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD 2>/dev/null || echo 0) "+" 30000)
+        sed -i "s/DKSU_VERSION=16/DKSU_VERSION=${KSU_VERSION}/" Makefile 2>/dev/null || true
+        
+        cd "$KERNEL_PLATFORM_FOLDER"
+        KSU_COMMIT_SHA=$(git -C KernelSU rev-parse HEAD 2>/dev/null || echo "unknown")
+        echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
+        echo "NEED_HOOKS=false" >> $GITHUB_ENV
+        
+        cat >> "$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig" <<EOF
+CONFIG_KSU=y
+EOF
+        
+        echo "WKSU" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "$KSU_VERSION" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+        echo "WildKSU Version: $KSU_VERSION"
+        echo "✅ WildKSU added (commit: ${KSU_COMMIT_SHA:0:8})"
         echo "::endgroup::"
 
     - name: Apply SUSFS Patches (Version Fixups)
@@ -1209,7 +1322,23 @@ runs:
             fi
             ;;
           "v2.1.0"|"v2.2.0")
-            if [ "${{ inputs.ksu_type }}" = "KSUN" ]; then
+            if [ "${{ inputs.ksu_type }}" = "SUKISU" ] || [ "${{ inputs.ksu_type }}" = "SUKISU_ULTRA" ]; then
+              echo "SukiSU Ultra: SUSFS built-in, applying safety patch..."
+              SUKISU_SAFETY="$KERNEL_PATCHES_FOLDER/ksu_safety/${{ env.KERNEL_VER }}/70_ksu_safety-sukisu-${{ env.KERNEL_VER }}.patch"
+              if [ -s "$SUKISU_SAFETY" ]; then
+                cd "$KERNEL_PLATFORM_FOLDER/KernelSU" 2>/dev/null || cd "$COMMON_KERNEL_FOLDER/drivers/kernelsu" 2>/dev/null || true
+                patch -p1 --forward --batch -N < "$SUKISU_SAFETY" || true
+                cd "$KERNEL_PLATFORM_FOLDER"
+              fi
+            elif [ "${{ inputs.ksu_type }}" = "RESUKISU" ]; then
+              echo "ReSukiSU: SUSFS built-in, applying safety patch..."
+              RESUKISU_SAFETY="$KERNEL_PATCHES_FOLDER/ksu_safety/${{ env.KERNEL_VER }}/70_ksu_safety-resukisu-${{ env.KERNEL_VER }}.patch"
+              if [ -s "$RESUKISU_SAFETY" ]; then
+                cd "$KERNEL_PLATFORM_FOLDER/KernelSU" 2>/dev/null || cd "$COMMON_KERNEL_FOLDER/drivers/kernelsu" 2>/dev/null || true
+                patch -p1 --forward --batch -N < "$RESUKISU_SAFETY" || true
+                cd "$KERNEL_PLATFORM_FOLDER"
+              fi
+            elif [ "${{ inputs.ksu_type }}" = "KSUN" ]; then
               cd "$KSUN_FOLDER"
               patch -p1 --forward < "$SUSFS_FOLDER/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch" || true
               SUSFS_FIX_BASE="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/$susfs_version"

@@ -32,10 +32,10 @@ on:
           - All-A16
         default: Pad3
       ksu_options:
-        description: 'Enter KernelSU build json'
+        description: 'Enter KernelSU build json (type: sukisu, ksun, resukisu, ksu, or wksu)'
         required: true
         type: string
-        default: '[{"type":"ksun","hash":"dev"}]'
+        default: '[{"type":"sukisu","hash":"main"}]'
       optimize_level:
         description: "Compiler optimization level"
         required: true
@@ -114,7 +114,7 @@ jobs:
           
           input="${{ github.event.inputs.op_model }}"
           ksu_options_raw='${{ github.event.inputs.ksu_options }}'
-          if ! ksu_options_normalized=$(echo "$ksu_options_raw" | jq -c 'map(if .type then .type |= ascii_upcase | if .hash == null then if .type == "KSUN" then .hash = "dev" elif .type == "KSU" then .hash = "main" else .hash end else . end else error("No type found") end)' 2>&1); then
+          if ! ksu_options_normalized=$(echo "$ksu_options_raw" | jq -c 'map(if .type then .type |= ascii_upcase | if .hash == null or .hash == "" then if .type == "KSUN" then .hash = "dev" elif .type == "SUKISU" or .type == "SUKISU_ULTRA" then .hash = "main" elif .type == "RESUKISU" then .hash = "main" elif .type == "WKSU" then .hash = "main" else .hash = "main" end else . end else error("No type found") end)' 2>&1); then
             echo "::error::ksu_options validation failed: $ksu_options_normalized"
             exit 1
           fi
@@ -235,13 +235,28 @@ jobs:
           ksu_type=$(echo "$ksu_options_normalized" | jq -r '.[0].type')
           ksu_ref=$(echo "$ksu_options_normalized" | jq -r '.[0].hash')
           
-          if [ "$ksu_type" == "KSUN" ]; then
-            KSU_REPO_OWNER="KernelSU-Next"
-            KSU_REPO_NAME="KernelSU-Next"
-          else
-            KSU_REPO_OWNER="tiann"
-            KSU_REPO_NAME="KernelSU"
-          fi
+          case "$ksu_type" in
+            KSUN)
+              KSU_REPO_OWNER="KernelSU-Next"
+              KSU_REPO_NAME="KernelSU-Next"
+              ;;
+            SUKISU|SUKISU_ULTRA)
+              KSU_REPO_OWNER="SukiSU-Ultra"
+              KSU_REPO_NAME="SukiSU-Ultra"
+              ;;
+            RESUKISU)
+              KSU_REPO_OWNER="ReSukiSU"
+              KSU_REPO_NAME="ReSukiSU"
+              ;;
+            WKSU)
+              KSU_REPO_OWNER="WildKernels"
+              KSU_REPO_NAME="Wild_KSU"
+              ;;
+            *)
+              KSU_REPO_OWNER="tiann"
+              KSU_REPO_NAME="KernelSU"
+              ;;
+          esac
           
           HEAD_REF="refs/heads/${ksu_ref}"
           TAG_REF="refs/tags/${ksu_ref}"
@@ -1210,7 +1225,17 @@ jobs:
           
           ### Official Manager
           EOF
-          if [ "$ksu_type" == "KSUN" ]; then
+          if [ "$ksu_type" == "SUKISU" ] || [ "$ksu_type" == "SUKISU_ULTRA" ]; then
+            cat << EOF >> release_notes.md
+          - **SukiSU Ultra Manager** (Recommended for SUSFS / Multi-manager)  
+            → [GitHub Release](https://github.com/SukiSU-Ultra/SukiSU-Ultra/releases)
+          EOF
+          elif [ "$ksu_type" == "RESUKISU" ]; then
+            cat << EOF >> release_notes.md
+          - **ReSukiSU Manager**  
+            → [GitHub Release](https://github.com/ReSukiSU/ReSukiSU/releases)
+          EOF
+          elif [ "$ksu_type" == "KSUN" ]; then
             cat << EOF >> release_notes.md
           - **KernelSU Next Manager**  
             → [GitHub Release](https://github.com/KernelSU-Next/KernelSU-Next/releases)

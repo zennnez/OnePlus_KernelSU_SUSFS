@@ -4,6 +4,8 @@
 
 ### For OnePlus Pad 3 · Pad 2 Pro (SM8750) · OnePlus 12 (SM8650, custom ROM)
 
+[![SukiSU-Ultra](https://img.shields.io/badge/SukiSU_Ultra-Supported-blueviolet?logo=github)](https://github.com/SukiSU-Ultra/SukiSU-Ultra)
+[![ReSukiSU](https://img.shields.io/badge/ReSukiSU-Supported-blue?logo=github)](https://github.com/ReSukiSU/ReSukiSU)
 [![KernelSU-Next](https://img.shields.io/badge/KernelSU_Next-Supported-brightgreen?logo=github)](https://kernelsu-next.github.io/webpage/)
 [![KernelSU](https://img.shields.io/badge/KernelSU-Supported-green?logo=github)](https://kernelsu.org/)
 [![SUSFS](https://img.shields.io/badge/SUSFS-Integrated-orange?logo=gitlab)](https://gitlab.com/simonpunk/susfs4ksu)
