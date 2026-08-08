@@ -1156,23 +1156,37 @@ EOF
             SUSFS_FIX_OVERLAY="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/stable/$susfs_version"
             for rej in $(find ./kernel -maxdepth 2 -name "*.rej"); do
               file=$(basename "$rej" .rej)
+              target_file="${rej%.rej}"
               BASE_PATCH="$SUSFS_FIX_BASE/fix_$file.patch"
               OVERLAY_PATCH="$SUSFS_FIX_OVERLAY/fix_$file.patch"
               echo "Patching file: $file with fix_$file.patch"
               rm -f "$rej"
+              cp "$target_file" "$target_file.pristine"
               APPLIED=0
               if [ -f "$BASE_PATCH" ]; then
                 echo "  Applying base patch: $BASE_PATCH"
                 if patch -p1 --forward < "$BASE_PATCH"; then
                   APPLIED=1
+                else
+                  echo "  Base patch failed/partial -- restoring pristine file before overlay attempt"
+                  cp "$target_file.pristine" "$target_file"
+                  rm -f "${target_file}.rej" "${target_file}.orig"
                 fi
               fi
               if [ "$APPLIED" -eq 0 ] && [ -f "$OVERLAY_PATCH" ]; then
                 echo "  Applying stable overlay patch: $OVERLAY_PATCH"
-                patch -p1 --forward < "$OVERLAY_PATCH" || true
+                if patch -p1 --forward < "$OVERLAY_PATCH"; then
+                  APPLIED=1
+                else
+                  cp "$target_file.pristine" "$target_file"
+                  rm -f "${target_file}.rej" "${target_file}.orig"
+                fi
               fi
-              if [ ! -f "$BASE_PATCH" ] && [ ! -f "$OVERLAY_PATCH" ]; then
+              rm -f "$target_file.pristine" "$target_file.orig"
+              if [ "$APPLIED" -eq 0 ] && [ ! -f "$BASE_PATCH" ] && [ ! -f "$OVERLAY_PATCH" ]; then
                 echo "::warning::No fix patch found for $file (base: $BASE_PATCH; overlay: $OVERLAY_PATCH) -- this .rej will remain unresolved, check for a compile error referencing $file"
+              elif [ "$APPLIED" -eq 0 ]; then
+                echo "::error::Both base and overlay fix patches failed for $file -- left in unpatched (but consistent) state"
               fi
             done
             echo "Patching Hook Mode!"
@@ -1345,23 +1359,37 @@ EOF
               SUSFS_FIX_OVERLAY="$KERNEL_PATCHES_FOLDER/next/susfs_fix_patches/stable/$susfs_version"
               for rej in $(find ./kernel -maxdepth 2 -name "*.rej"); do
                 file=$(basename "$rej" .rej)
+                target_file="${rej%.rej}"
                 BASE_PATCH="$SUSFS_FIX_BASE/fix_$file.patch"
                 OVERLAY_PATCH="$SUSFS_FIX_OVERLAY/fix_$file.patch"
                 echo "Patching file: $file with fix_$file.patch"
                 rm -f "$rej"
+                cp "$target_file" "$target_file.pristine"
                 APPLIED=0
                 if [ -f "$BASE_PATCH" ]; then
                   echo "  Applying base patch: $BASE_PATCH"
                   if patch -p1 --forward < "$BASE_PATCH"; then
                     APPLIED=1
+                  else
+                    echo "  Base patch failed/partial -- restoring pristine file before overlay attempt"
+                    cp "$target_file.pristine" "$target_file"
+                    rm -f "${target_file}.rej" "${target_file}.orig"
                   fi
                 fi
                 if [ "$APPLIED" -eq 0 ] && [ -f "$OVERLAY_PATCH" ]; then
                   echo "  Applying stable overlay patch: $OVERLAY_PATCH"
-                  patch -p1 --forward < "$OVERLAY_PATCH" || true
+                  if patch -p1 --forward < "$OVERLAY_PATCH"; then
+                    APPLIED=1
+                  else
+                    cp "$target_file.pristine" "$target_file"
+                    rm -f "${target_file}.rej" "${target_file}.orig"
+                  fi
                 fi
-                if [ ! -f "$BASE_PATCH" ] && [ ! -f "$OVERLAY_PATCH" ]; then
+                rm -f "$target_file.pristine" "$target_file.orig"
+                if [ "$APPLIED" -eq 0 ] && [ ! -f "$BASE_PATCH" ] && [ ! -f "$OVERLAY_PATCH" ]; then
                   echo "::warning::No fix patch found for $file (base: $BASE_PATCH; overlay: $OVERLAY_PATCH)"
+                elif [ "$APPLIED" -eq 0 ]; then
+                  echo "::error::Both base and overlay fix patches failed for $file -- left in unpatched (but consistent) state"
                 fi
               done
               echo "Patching Hook Mode!"
