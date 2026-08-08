@@ -1,4 +1,4 @@
-name: 'Download and configure Kernel Source code'
+name: 'Knockout Kernels - Download and configure Kernel Source code'
 
 inputs:
   source_location:

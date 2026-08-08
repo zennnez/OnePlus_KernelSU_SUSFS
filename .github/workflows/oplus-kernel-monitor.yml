@@ -362,7 +362,7 @@ jobs:
           else
             git checkout --orphan status-page && git rm -rf .
           fi
-          echo "# 📱 OnePlusOSS Kernel Tracker" > README.md
+          echo "# 📱 Knockout Kernels — OnePlusOSS Kernel Tracker" > README.md
           echo "> **Last Update:** $(date -u) (UTC)" >> README.md
           echo "Daily automated report for OnePlus Kernel branches." >> README.md
           cat ../manifest_summary.md >> README.md

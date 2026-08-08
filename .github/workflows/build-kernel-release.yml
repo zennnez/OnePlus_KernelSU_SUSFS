@@ -1,4 +1,4 @@
-name: OnePlus Pad 3 / Pad 2 Pro / OnePlus 12 (Custom ROM)
+name: Knockout Kernels - OnePlus Pad 3 / Pad 2 Pro / OnePlus 12 (Custom ROM)
 
 permissions:
   contents: write
@@ -1260,19 +1260,17 @@ jobs:
           ## 📜 Changelog
           
           ### This Release
+          - ⚡ **Knockout Kernels** — renamed from Wild Kernel, same great pipeline extended with new features.
+          - 👻 ZeroMount VFS driver integrated (A16 builds: OP-PAD-2-PRO, OP12-CUSTOM).
+          - 🥷 Enhanced SUSFS (51_ layer): kstat redirect, unicode filter, buffer hardening.
+          - 🔐 KSU Safety patches (70_): null-termination, UID range, zygote guard (ReSukiSU variant).
+          - 🔑 KALLSYMS_ALL enabled for full kernel symbol export.
+          - 🔧 CONFIG_KSU_SUSFS_SUS_KSTAT_REDIRECT and CONFIG_KSU_SUSFS_UNICODE_FILTER added.
           - Updated SUSFS to $SUSFS_BASE_VERSION.
-          - Added HMBIRD support for all SM8750/MT6991 devices.
-          - Improved ccache build system.
-          - Enhanced SUSFS hiding capabilities.
-          - Added IP_SET, IPv6 NAT and TTL support.
-          - Added TMPFS_XATTR and TMPFS_POSIX_ACL support for Mountify.
-          - Added Ptrace leak fix for kernels < 5.16.
+          - LLVM POLLY enabled for A16 builds.
+          - ZRAM Writeback enabled for A16 builds.
           - Compiler optimizations (${{ inputs.optimize_level }}).
-          - Additional General Optimisations.
-          - Wild_KSU Manager Support.
-          - Unicode Bypass Fix
-          - Droidspaces Support
-          - NTSync Support
+          - Build identity: kernel uname suffix `knockout`.
           
           ### Previous Releases
           See [Releases Page](${{ github.server_url }}/${{ github.repository }}/releases)
@@ -1281,15 +1279,20 @@ jobs:
           
           ## 🙏 Credits
           
-          - **KernelSU Next Team** - Root solution
-          - **KernelSU Team** - Root solution
-          - **simonpunk** - SUSFS development
-          - **OnePlus** - Kernel source code
-          - **Community Contributors** - Testing and feedback
+          - **WildKernels (zennnez)** — build pipeline, manifests, and patch framework (base for this project)
+          - **KernelSU Next Team** — Root solution
+          - **KernelSU Team** — Root solution
+          - **simonpunk** — SUSFS development
+          - **Enginex0** — ZeroMount VFS, Enhanced SUSFS (51_), KSU Safety (70_), Super-Builders suite
+          - **Sultan Alsawaf (kerneltoast)** — reduce_pelt patch
+          - **vc-teahouse** — Baseband Guard (BBG)
+          - **ravindu644** — Droidspaces
+          - **OnePlus** — Kernel source code
+          - **Community Contributors** — Testing and feedback
           
           ---
           
-          **⚡ Built with ❤️ by the community**
+          **⚡ Built with ❤️ by Knockout Kernels**
           
           EOF
           
