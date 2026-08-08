@@ -1472,6 +1472,7 @@ runs:
         CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y
         CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y
         CONFIG_KSU_SUSFS_SUS_KSTAT=y
+        CONFIG_KSU_SUSFS_SUS_KSTAT_REDIRECT=y
         CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n
         CONFIG_KSU_SUSFS_TRY_UMOUNT=y
         CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y
@@ -1482,8 +1483,98 @@ runs:
         CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
         CONFIG_KSU_SUSFS_SUS_MAP=y
         CONFIG_KSU_SUSFS_SUS_SU=n
+        CONFIG_KSU_SUSFS_UNICODE_FILTER=y
+        CONFIG_KALLSYMS_ALL=y
         EOF
         
+        echo "::endgroup::"
+
+    - name: Apply Enhanced SUSFS Patches (51_)
+      shell: bash
+      if: ${{ env.OP_SUSFS == 'true' }}
+      run: |
+        set -euo pipefail
+        echo "::group::Apply Enhanced SUSFS patches (51_)"
+        cd "$COMMON_KERNEL_FOLDER"
+        
+        KVER="${{ env.KERNEL_VER }}"
+        AVER="${{ env.ANDROID_VER }}"
+        ENHANCED_PATCH="$KERNEL_PATCHES_FOLDER/susfs_enhanced/${KVER}/51_enhanced_susfs-${AVER}-${KVER}.patch"
+        
+        if [ -f "$ENHANCED_PATCH" ]; then
+          echo "Applying enhanced SUSFS patch: $ENHANCED_PATCH"
+          if patch -p1 --forward --dry-run -F 3 < "$ENHANCED_PATCH" > /dev/null 2>&1; then
+            patch -p1 --forward -F 3 < "$ENHANCED_PATCH" || true
+            echo "✅ Enhanced SUSFS patch applied"
+          else
+            echo "::warning::Enhanced SUSFS patch dry-run failed (may already be applied or context mismatch) — skipping"
+          fi
+        else
+          echo "::notice::No enhanced SUSFS patch found at $ENHANCED_PATCH — skipping"
+        fi
+        
+        find . -maxdepth 3 -name "*.rej" -delete 2>/dev/null || true
+        echo "::endgroup::"
+
+    - name: Apply KSU Safety Patches (70_)
+      shell: bash
+      if: ${{ env.OP_SUSFS == 'true' }}
+      run: |
+        set -euo pipefail
+        echo "::group::Apply KSU Safety patches (70_)"
+        cd "$COMMON_KERNEL_FOLDER"
+        
+        KVER="${{ env.KERNEL_VER }}"
+        SAFETY_PATCH="$KERNEL_PATCHES_FOLDER/ksu_safety/${KVER}/70_ksu_safety-resukisu-${KVER}.patch"
+        
+        if [ -f "$SAFETY_PATCH" ]; then
+          echo "Applying KSU safety patch: $SAFETY_PATCH"
+          if patch -p1 --forward --dry-run -F 3 < "$SAFETY_PATCH" > /dev/null 2>&1; then
+            patch -p1 --forward -F 3 < "$SAFETY_PATCH" || true
+            echo "✅ KSU Safety patch applied"
+          else
+            echo "::warning::KSU safety patch dry-run failed (may already be applied or context mismatch) — skipping"
+          fi
+        else
+          echo "::notice::No KSU safety patch found at $SAFETY_PATCH — skipping"
+        fi
+        
+        find . -maxdepth 3 -name "*.rej" -delete 2>/dev/null || true
+        echo "::endgroup::"
+
+    - name: Apply ZeroMount VFS Patches (60_)
+      shell: bash
+      if: ${{ env.OP_ZEROMOUNT == 'true' }}
+      run: |
+        set -euo pipefail
+        echo "::group::Apply ZeroMount VFS patches (60_)"
+        cd "$COMMON_KERNEL_FOLDER"
+        
+        KVER="${{ env.KERNEL_VER }}"
+        AVER="${{ env.ANDROID_VER }}"
+        ZEROMOUNT_PATCH="$KERNEL_PATCHES_FOLDER/zeromount/${KVER}/60_zeromount-${AVER}-${KVER}.patch"
+        
+        if [ -f "$ZEROMOUNT_PATCH" ]; then
+          echo "Applying ZeroMount patch: $ZEROMOUNT_PATCH"
+          if patch -p1 --forward --dry-run -F 3 < "$ZEROMOUNT_PATCH" > /dev/null 2>&1; then
+            patch -p1 --forward -F 3 < "$ZEROMOUNT_PATCH" || true
+            echo "✅ ZeroMount patch applied"
+          else
+            echo "::warning::ZeroMount patch dry-run failed (may already be applied or context mismatch) — skipping"
+          fi
+        else
+          echo "::warning::ZeroMount patch not found at $ZEROMOUNT_PATCH — skipping (add patch file for kernel ${AVER}-${KVER})"
+        fi
+        
+        find . -maxdepth 3 -name "*.rej" -delete 2>/dev/null || true
+        
+        # Add ZeroMount kernel config flags
+        echo "Add ZeroMount Configuration Settings"
+        cat >> "$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig" <<EOF
+        CONFIG_ZEROMOUNT=y
+        EOF
+        
+        echo "✅ ZeroMount VFS patches applied"
         echo "::endgroup::"
 
     - name: Add BBG

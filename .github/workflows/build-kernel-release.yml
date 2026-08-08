@@ -1019,7 +1019,7 @@ jobs:
             feature_flags=$(jq -r --arg MODEL "$model" --arg ORIG_MODEL "$possible_orig_model" --arg OS "$os_ver" '
               ([ .[] | select(.model == $ORIG_MODEL and .os_version == $OS) ][0]) //
               ([ .[] | select(.model == $MODEL      and .os_version == $OS) ][0]) |
-              "\(.hmbird // false)\t\(.susfs // false)\t\(.bbr // false)\t\(.bbr3 // false)\t\(.bbg // false)\t\(.ttl // false)\t\(.ip_set // false)\t\(.unicode // false)\t\(.ds // false)\t\(.ds_ext // false)\t\(.ntsync // false)\t\(.pelt // false)\t\(.polly // false)\t\(.lz4_zstd // false)\t\(.zram_writeback // false)\t\(.opt // false)"
+              "\(.hmbird // false)\t\(.susfs // false)\t\(.bbr // false)\t\(.bbr3 // false)\t\(.bbg // false)\t\(.ttl // false)\t\(.ip_set // false)\t\(.unicode // false)\t\(.ds // false)\t\(.ds_ext // false)\t\(.ntsync // false)\t\(.pelt // false)\t\(.polly // false)\t\(.lz4_zstd // false)\t\(.zram_writeback // false)\t\(.opt // false)\t\(.zeromount // false)"
             ' <<< "$JSON_BUILD_DATA")
             
             features=()
@@ -1028,7 +1028,7 @@ jobs:
               echo "Warning: No JSON entry found for model: $model" >&2
               features_str="N/A"
             else
-              IFS=$'\t' read -r hmbird susfs bbr bbr3 bbg ttl ip_set unicode ds ds_ext ntsync pelt polly lz4_zstd zram_writeback opt <<< "$feature_flags"
+              IFS=$'\t' read -r hmbird susfs bbr bbr3 bbg ttl ip_set unicode ds ds_ext ntsync pelt polly lz4_zstd zram_writeback opt zeromount <<< "$feature_flags"
               
               # Build features string based on boolean values
               [[ "$hmbird" == "true" ]] && features+=("🐦 HMBIRD")
@@ -1047,6 +1047,7 @@ jobs:
               [[ "$lz4_zstd" == "true" ]] && features+=("📦 LZ4 1.10 & ZSTD")
               [[ "$zram_writeback" == "true" ]] && features+=("💾 ZRAM Writeback")
               [[ "$opt" == "true" ]] && features+=("⚡ Memory & CPU Opts")
+              [[ "$zeromount" == "true" ]] && features+=("👻 ZeroMount VFS")
               
               total=${#features[@]}
               if [ $total -eq 0 ]; then
